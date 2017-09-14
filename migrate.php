@@ -20,7 +20,17 @@ class Pwd
      *
      * @var array
      */
-    protected $mappingTables = ['pwd_repositories', 'pwd_collections'];
+    protected $mappingTables = [
+        // mapped to item sets
+        'pwd_collections',
+        'pwd_microfilms',
+        'pwd_publications',
+        // mapped to items
+        'pwd_repositories',
+        'pwd_names',
+        'pwd_documents',
+        'pwd_images',
+    ];
 
     /**
      * Vocabularies to import

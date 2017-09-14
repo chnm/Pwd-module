@@ -1,0 +1,9 @@
+<?php
+// PWD database connection.
+define('PWD_DB_HOST', '');
+define('PWD_DB_NAME', '');
+define('PWD_DB_USERNAME', '');
+define('PWD_DB_PASSWORD', '');
+
+// Omeka S installation path.
+define('PWD_OMEKA_PATH', '');

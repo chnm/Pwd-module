@@ -38,7 +38,33 @@ class Pwd
                 'o:namespace_uri' => 'http://www.w3.org/2006/vcard/ns#',
                 'o:prefix' => 'vcard',
                 'o:label' => 'vCard Ontology',
-                'o:comment' =>  'Ontology for describing People and Organizations',
+                'o:comment' =>  'An ontology for describing people and organizations.',
+            ],
+        ],
+        [
+            'strategy' => 'url',
+            'options' => [
+                'url' => 'http://lov.okfn.org/dataset/lov/vocabs/bio/versions/2011-06-14.n3',
+                'format' => 'turtle',
+            ],
+            'vocab' => [
+                'o:namespace_uri' => 'http://purl.org/vocab/bio/0.1/',
+                'o:prefix' => 'bio',
+                'o:label' => 'BIO',
+                'o:comment' =>  'A vocabulary for describing biographical information about people, both living and dead.',
+            ],
+        ],
+        [
+            'strategy' => 'url',
+            'options' => [
+                'url' => 'http://lov.okfn.org/dataset/lov/vocabs/time/versions/2017-04-06.n3',
+                'format' => 'turtle',
+            ],
+            'vocab' => [
+                'o:namespace_uri' => 'http://www.w3.org/2006/time#',
+                'o:prefix' => 't',
+                'o:label' => 'Time Ontology',
+                'o:comment' =>  'A vocabulary for defining temporal entities such as time intervals, their properties and relationships.',
             ],
         ],
     ];
@@ -88,11 +114,20 @@ class Pwd
         }
     }
 
+    /**
+     * Import vocabularies needed for PWD migration.
+     */
     public function importVocabs()
     {
+        $conn = $this->services->get('Omeka\Connection');
         $importer = $this->services->get('Omeka\RdfImporter');
         foreach ($this->vocabs as $vocab) {
-            $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
+            // First check if the vocabulary is already imported.
+            $stmt = $conn->prepare('SELECT 1 FROM vocabulary WHERE namespace_uri = ?');
+            $stmt->execute([$vocab['vocab']['o:namespace_uri']]);
+            if (!$stmt->fetch()) {
+                $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
+            }
         }
     }
 

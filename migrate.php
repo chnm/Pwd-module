@@ -23,7 +23,7 @@ class Pwd
     protected $vocabMembers = [];
 
     /**
-     * PWD/Omeka mapping tables.
+     * PWD/Omeka mapping tables
      *
      * @var array
      */
@@ -38,6 +38,28 @@ class Pwd
         'pwd_documents',
         'pwd_images',
     ];
+
+    /**
+     * Cache of PWD/Omeka identifier mappings
+     *
+     * @var array
+     */
+    protected $mappings = [];
+
+    /**
+     * Do not migrate these special PWD repositories (no data to save).
+     *
+     * Each have corresponding PWD collections:
+     *
+     * - CITE (3) => Cite only--no image (422)
+     * - PRINT (26) => Printed Version only (9)
+     * - TYPED (209) => Typed Version only (13)
+     * - HAND (210) => Handwritten Transcript only (150)
+     * - LISTED (232) => Document listed in Syrett's appendicies (800)
+     *
+     * @var array
+     */
+    protected $excludeRepositories = [3, 26, 209, 210, 232];
 
     /**
      * Vocabularies to import
@@ -118,6 +140,7 @@ class Pwd
 
         // Migrate
         $this->migrateRepositories();
+        $this->migrateCollections();
     }
 
     /**
@@ -188,6 +211,7 @@ class Pwd
     {
         $insertValues = [];
         foreach ($content as $key => $value) {
+            $this->mappings[$table][$key] = $value->id(); // Cache the mappings
             $insertValues[] = $key;
             $insertValues[] = $value->id();
         }
@@ -220,6 +244,10 @@ class Pwd
                     $dataValue['type'] = 'uri';
                     $dataValue['@id'] = $value;
                     break;
+                case 'resource':
+                    $dataValue['type'] = 'resource';
+                    $dataValue['value_resource_id'] = $value;
+                    break;
                 case 'literal':
                 default:
                     $dataValue['type'] = 'literal';
@@ -251,9 +279,11 @@ class Pwd
      */
     public function migrateRepositories()
     {
-        // Migrate PWD repositories.
         $repositories = [];
         foreach ($this->getTable('repositories') as $row) {
+            if (in_array($row['repositoryID'], $this->excludeRepositories)) {
+                continue;
+            }
             $data = [
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['vcard:Organization'],
@@ -306,6 +336,54 @@ class Pwd
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('items', $repositories);
         $this->mapTable('pwd_repositories', $response->getContent());
+    }
+
+    /**
+     * Migrate PWD collections into Omeka.
+     */
+    public function migrateCollections()
+    {
+        $collections = [];
+        foreach ($this->getTable('collections') as $row) {
+            $data = [
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
+                ],
+            ];
+
+            // dcterms:title | bibo:shortTitle
+            $title = null;
+            $shortTitle = null;
+            $longName = trim($row['collectionLongName']);
+            $shortName = trim($row['collectionShortName']);
+            if ($longName && $shortName) {
+                $title = $longName;
+                if ($longName !== $shortName) {
+                    $shortTitle = $shortName;
+                }
+            }
+            if ($longName && !$shortName) {
+                $title = $longName;
+            }
+            if (!$longName && $shortName) {
+                $title = $shortName;
+            }
+
+            $mapping = [
+                [$title, 'dcterms:title', 'literal'],
+                [$shortTitle, 'bibo:shortTitle', 'literal'],
+            ];
+            // PWD collections without a repository: 1, 821. Do not assign
+            // excluded repositories.
+            if ($row['repositoryID'] && !in_array($row['repositoryID'], $this->excludeRepositories)) {
+                $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'dcterms:publisher', 'resource'];
+            }
+            $collections[$row['collectionID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('item_sets', $collections);
+        $this->mapTable('pwd_collections', $response->getContent());
     }
 }
 

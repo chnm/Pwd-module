@@ -106,16 +106,18 @@ class Pwd
         $this->services = $application->getServiceManager();
     }
 
+    /**
+     * Perform the migration.
+     */
     public function migrate()
     {
+        // Prepare migration
         $this->createMappingTables();
         $this->importVocabs();
         $this->cacheVocabMembers();
 
-        // Migrate PWD repositories.
-        foreach ($this->getTable('repositories') as $row) {
-            echo $row['repositoryMARCOrganizationCode'] . "\n";
-        }
+        // Migrate
+        $this->migrateRepositories();
     }
 
     /**
@@ -165,11 +167,160 @@ class Pwd
         }
     }
 
+    /**
+     * Get the PDO statement for iterating all rows of a PWD table.
+     *
+     * @param string $table The PWD table name
+     * @return PDOStatement
+     */
     public function getTable($table)
     {
         return $this->conn->query(sprintf('SELECT * FROM %s', $table));
+    }
+
+    /**
+     * Map PWD identifiers to Omeka identifiers.
+     *
+     * @param string $table Mapping table name
+     * @param array $content Batch create response content
+     */
+    public function mapTable($table, $content)
+    {
+        $insertValues = [];
+        foreach ($content as $key => $value) {
+            $insertValues[] = $key;
+            $insertValues[] = $value->id();
+        }
+        $sql = sprintf(
+            'INSERT INTO %s (id_pwd, id_omeka) VALUES %s',
+            $table,
+            implode(', ', array_fill(0, count($content), '(?, ?)'))
+        );
+        $conn = $this->services->get('Omeka\Connection');
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($insertValues);
+    }
+
+    /**
+     * Migrate PWD repositories into Omeka.
+     */
+    public function migrateRepositories()
+    {
+        // Migrate PWD repositories.
+        $repositories = [];
+        foreach ($this->getTable('repositories') as $row) {
+            $repository = [
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['vcard:Organization'],
+                ],
+            ];
+            // dcterms:title
+            $title = [];
+            if ($row['repositoryName1']) {
+                $title[] = $row['repositoryName1'];
+            }
+            if ($row['repositoryName2']) {
+                $title[] = $row['repositoryName2'];
+            }
+            if ($title) {
+                $repository['dcterms:title'][] = [
+                    '@value' => implode(': ', $title),
+                    'property_id' => $this->vocabMembers['property']['dcterms:title'],
+                    'type' => 'literal',
+                ];
+            }
+            // dcterms:identifier
+            if ($row['repositoryMARCOrganizationCode']) {
+                // The provided codes don't always match up with the corresponding
+                // organization. Even so, corrections can be made post-migration.
+                $repository['dcterms:identifier'][] = [
+                    '@id' => sprintf(
+                        'http://id.loc.gov/vocabulary/organizations/%s',
+                        strtolower($row['repositoryMARCOrganizationCode']) // normalized
+                    ),
+                    'property_id' => $this->vocabMembers['property']['dcterms:identifier'],
+                    'type' => 'uri',
+                ];
+            }
+            // vcard:organization-name
+            if ($row['repositoryName1']) {
+                $repository['vcard:organization-name'][] = [
+                    '@value' => $row['repositoryName1'],
+                    'property_id' => $this->vocabMembers['property']['vcard:organization-name'],
+                    'type' => 'literal',
+                ];
+            }
+            // vcard:organization-unit
+            if ($row['repositoryName2']) {
+                $repository['vcard:organization-unit'][] = [
+                    '@value' => $row['repositoryName2'],
+                    'property_id' => $this->vocabMembers['property']['vcard:organization-unit'],
+                    'type' => 'literal',
+                ];
+            }
+            // vcard:street-address
+            $address = [];
+            if ($row['repositoryAddress1']) {
+                $address[] = $row['repositoryAddress1'];
+            }
+            if ($row['repositoryAddress2']) {
+                $address[] = $row['repositoryAddress2'];
+            }
+            if ($address) {
+                $repository['vcard:street-address'][] = [
+                    '@value' => implode(' ', $address),
+                    'property_id' => $this->vocabMembers['property']['vcard:street-address'],
+                    'type' => 'literal',
+                ];
+            }
+            // vcard:locality
+            if ($row['repositoryCity']) {
+                $repository['vcard:locality'][] = [
+                    '@value' => $row['repositoryCity'],
+                    'property_id' => $this->vocabMembers['property']['vcard:locality'],
+                    'type' => 'literal',
+                ];
+            }
+            // vcard:region
+            if ($row['repositoryState']) {
+                $repository['vcard:region'][] = [
+                    '@value' => $row['repositoryState'],
+                    'property_id' => $this->vocabMembers['property']['vcard:region'],
+                    'type' => 'literal',
+                ];
+            }
+            // vcard:postal-code
+            if ($row['repositoryZipCode']) {
+                $repository['vcard:postal-code'][] = [
+                    '@value' => $row['repositoryZipCode'],
+                    'property_id' => $this->vocabMembers['property']['vcard:postal-code'],
+                    'type' => 'literal',
+                ];
+            }
+            // foaf:phone
+            if ($row['repositoryPhoneNumber']) {
+                $repository['foaf:phone'][] = [
+                    '@value' => $row['repositoryPhoneNumber'],
+                    'property_id' => $this->vocabMembers['property']['foaf:phone'],
+                    'type' => 'literal',
+                ];
+            }
+            // vcard:note
+            if ($row['repositoryRepositoryNotes']) {
+                $repository['vcard:note'][] = [
+                    '@value' => $row['repositoryRepositoryNotes'],
+                    'property_id' => $this->vocabMembers['property']['vcard:note'],
+                    'type' => 'literal',
+                ];
+            }
+            $repositories[$row['repositoryID']] = $repository;
+        }
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('items', $repositories);
+        $this->mapTable('pwd_repositories', $response->getContent());
     }
 }
 
 require 'config.php';
 $pwd = new Pwd(PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_OMEKA_PATH);
+$pwd->migrate();

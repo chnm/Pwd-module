@@ -141,6 +141,7 @@ class Pwd
         // Migrate
         $this->migrateRepositories();
         $this->migrateCollections();
+        $this->migrateMicrofilms();
     }
 
     /**
@@ -384,6 +385,34 @@ class Pwd
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('item_sets', $collections);
         $this->mapTable('pwd_collections', $response->getContent());
+    }
+
+    /**
+     * Migrate PWD microfilms into Omeka.
+     */
+    public function migrateMicrofilms()
+    {
+        $microfilms = [];
+        foreach ($this->getTable('microfilms') as $row) {
+            $data = [
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:CollectedDocument'],
+                ],
+            ];
+
+            $mapping = [
+                [$row['microfilmCitation'], 'dcterms:bibliographicCitation', 'literal'],
+                [$row['microfilmShortTitle'], 'dcterms:title', 'literal'],
+            ];
+            if ($row['repositoryID']) {
+                $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'dcterms:publisher', 'resource'];
+            }
+            $microfilms[$row['microfilmID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('item_sets', $microfilms);
+        $this->mapTable('pwd_microfilms', $response->getContent());
     }
 }
 

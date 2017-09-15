@@ -202,6 +202,51 @@ class Pwd
     }
 
     /**
+     * Add a value to Omeka resource entity data.
+     *
+     * @param array $data
+     * @param string $value
+     * @param string $term
+     * @param string $type
+     * @return array
+     */
+    public function addValue(array $data, $value, $term, $type)
+    {
+        // A value must not be null or an empty string.
+        if (null !== $value && '' !== trim($value)) {
+            $dataValue = ['property_id' => $this->vocabMembers['property'][$term]];
+            switch ($type) {
+                case 'uri':
+                    $dataValue['type'] = 'uri';
+                    $dataValue['@id'] = $value;
+                    break;
+                case 'literal':
+                default:
+                    $dataValue['type'] = 'literal';
+                    $dataValue['@value'] = $value;
+            }
+            $data[$term][] = $dataValue;
+        }
+        return $data;
+    }
+
+    /**
+     * Add multiple values to Omeka resource entity data, given mapping
+     * instructions.
+     *
+     * @param array $data
+     * @param array $mapping
+     * @return array
+     */
+    public function addValues(array $data, array $mapping)
+    {
+        foreach ($mapping as $map) {
+            $data = $this->addValue($data, $map[0], $map[1], $map[2]);
+        }
+        return $data;
+    }
+
+    /**
      * Migrate PWD repositories into Omeka.
      */
     public function migrateRepositories()
@@ -209,11 +254,12 @@ class Pwd
         // Migrate PWD repositories.
         $repositories = [];
         foreach ($this->getTable('repositories') as $row) {
-            $repository = [
+            $data = [
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['vcard:Organization'],
                 ],
             ];
+
             // dcterms:title
             $title = [];
             if ($row['repositoryName1']) {
@@ -222,42 +268,16 @@ class Pwd
             if ($row['repositoryName2']) {
                 $title[] = $row['repositoryName2'];
             }
-            if ($title) {
-                $repository['dcterms:title'][] = [
-                    '@value' => implode(': ', $title),
-                    'property_id' => $this->vocabMembers['property']['dcterms:title'],
-                    'type' => 'literal',
-                ];
-            }
+            $title = $title ? implode(': ', $title) : null;
+
             // dcterms:identifier
-            if ($row['repositoryMARCOrganizationCode']) {
-                // The provided codes don't always match up with the corresponding
-                // organization. Even so, corrections can be made post-migration.
-                $repository['dcterms:identifier'][] = [
-                    '@id' => sprintf(
-                        'http://id.loc.gov/vocabulary/organizations/%s',
-                        strtolower($row['repositoryMARCOrganizationCode']) // normalized
-                    ),
-                    'property_id' => $this->vocabMembers['property']['dcterms:identifier'],
-                    'type' => 'uri',
-                ];
-            }
-            // vcard:organization-name
-            if ($row['repositoryName1']) {
-                $repository['vcard:organization-name'][] = [
-                    '@value' => $row['repositoryName1'],
-                    'property_id' => $this->vocabMembers['property']['vcard:organization-name'],
-                    'type' => 'literal',
-                ];
-            }
-            // vcard:organization-unit
-            if ($row['repositoryName2']) {
-                $repository['vcard:organization-unit'][] = [
-                    '@value' => $row['repositoryName2'],
-                    'property_id' => $this->vocabMembers['property']['vcard:organization-unit'],
-                    'type' => 'literal',
-                ];
-            }
+            // The provided codes don't always match up with the corresponding
+            // organization. Even so, corrections can be made post-migration.
+            $identifier = sprintf(
+                'http://id.loc.gov/vocabulary/organizations/%s',
+                strtolower($row['repositoryMARCOrganizationCode']) // normalized
+            );
+
             // vcard:street-address
             $address = [];
             if ($row['repositoryAddress1']) {
@@ -266,55 +286,23 @@ class Pwd
             if ($row['repositoryAddress2']) {
                 $address[] = $row['repositoryAddress2'];
             }
-            if ($address) {
-                $repository['vcard:street-address'][] = [
-                    '@value' => implode(' ', $address),
-                    'property_id' => $this->vocabMembers['property']['vcard:street-address'],
-                    'type' => 'literal',
-                ];
-            }
-            // vcard:locality
-            if ($row['repositoryCity']) {
-                $repository['vcard:locality'][] = [
-                    '@value' => $row['repositoryCity'],
-                    'property_id' => $this->vocabMembers['property']['vcard:locality'],
-                    'type' => 'literal',
-                ];
-            }
-            // vcard:region
-            if ($row['repositoryState']) {
-                $repository['vcard:region'][] = [
-                    '@value' => $row['repositoryState'],
-                    'property_id' => $this->vocabMembers['property']['vcard:region'],
-                    'type' => 'literal',
-                ];
-            }
-            // vcard:postal-code
-            if ($row['repositoryZipCode']) {
-                $repository['vcard:postal-code'][] = [
-                    '@value' => $row['repositoryZipCode'],
-                    'property_id' => $this->vocabMembers['property']['vcard:postal-code'],
-                    'type' => 'literal',
-                ];
-            }
-            // foaf:phone
-            if ($row['repositoryPhoneNumber']) {
-                $repository['foaf:phone'][] = [
-                    '@value' => $row['repositoryPhoneNumber'],
-                    'property_id' => $this->vocabMembers['property']['foaf:phone'],
-                    'type' => 'literal',
-                ];
-            }
-            // vcard:note
-            if ($row['repositoryRepositoryNotes']) {
-                $repository['vcard:note'][] = [
-                    '@value' => $row['repositoryRepositoryNotes'],
-                    'property_id' => $this->vocabMembers['property']['vcard:note'],
-                    'type' => 'literal',
-                ];
-            }
-            $repositories[$row['repositoryID']] = $repository;
+            $address = $address ? implode(' ', $address) : null;
+
+            $mapping = [
+                [$title, 'dcterms:title', 'literal'],
+                [$identifier, 'dcterms:identifier', 'uri'],
+                [$row['repositoryName1'], 'vcard:organization-name', 'literal'],
+                [$row['repositoryName2'], 'vcard:organization-unit', 'literal'],
+                [$address, 'vcard:street-address', 'literal'],
+                [$row['repositoryCity'], 'vcard:locality', 'literal'],
+                [$row['repositoryState'], 'vcard:region', 'literal'],
+                [$row['repositoryZipCode'], 'vcard:postal-code', 'literal'],
+                [$row['repositoryPhoneNumber'], 'foaf:phone', 'literal'],
+                [$row['repositoryRepositoryNotes'], 'vcard:note', 'literal'],
+            ];
+            $repositories[$row['repositoryID']] = $this->addValues($data, $mapping);
         }
+
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('items', $repositories);
         $this->mapTable('pwd_repositories', $response->getContent());

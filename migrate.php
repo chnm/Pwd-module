@@ -16,6 +16,13 @@ class Pwd
     protected $services;
 
     /**
+     * Cache of vocabulary members.
+     *
+     * @var array
+     */
+    protected $vocabMembers = [];
+
+    /**
      * PWD/Omeka mapping tables.
      *
      * @var array
@@ -103,10 +110,27 @@ class Pwd
     {
         $this->createMappingTables();
         $this->importVocabs();
+        $this->cacheVocabMembers();
 
         // Migrate PWD repositories.
         foreach ($this->getTable('repositories') as $row) {
             echo $row['repositoryMARCOrganizationCode'] . "\n";
+        }
+    }
+
+    /**
+     * Cache vocabulary members (classes and properties).
+     */
+    public function cacheVocabMembers()
+    {
+        foreach (['resource_class', 'property'] as $member) {
+            $conn = $this->services->get('Omeka\Connection');
+            $sql = 'SELECT m.id, m.local_name, v.prefix FROM %s m JOIN vocabulary v ON m.vocabulary_id = v.id';
+            $stmt = $conn->query(sprintf($sql, $member));
+            $this->vocabMembers[$member] = [];
+            foreach ($stmt as $row) {
+                $this->vocabMembers[$member][sprintf('%s:%s', $row['prefix'], $row['local_name'])] = $row['id'];
+            }
         }
     }
 
@@ -149,4 +173,3 @@ class Pwd
 
 require 'config.php';
 $pwd = new Pwd(PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_OMEKA_PATH);
-$pwd->migrate();

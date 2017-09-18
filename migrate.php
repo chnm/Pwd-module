@@ -183,6 +183,7 @@ class Pwd
         $this->migrateRepositories();
         $this->migrateCollections();
         $this->migrateMicrofilms();
+        $this->migratePublications();
     }
 
     /**
@@ -476,6 +477,45 @@ class Pwd
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('item_sets', $microfilms);
         $this->mapTable('pwd_microfilms', $response->getContent());
+    }
+
+    /**
+     * Migrate PWD publications into Omeka.
+     */
+    public function migratePublications()
+    {
+        $publications = [];
+        foreach ($this->getTable('publications') as $row) {
+            $data = [
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
+                ],
+            ];
+
+            $creator = [];
+            $firstName = trim($row['publicationAuthorFirstName']);
+            $lastName = trim($row['publicationAuthorLastName']);
+            if ($firstName) {
+                $creator[] = $firstName;
+            }
+            if ($lastName) {
+                $creator[] = $lastName;
+            }
+            $creator = $creator ? implode(' ', $creator) : null;
+
+            $mapping = [
+                [$creator, 'dcterms:creator', 'literal'],
+                [$row['publicationYear'], 'dcterms:issued', 'literal'],
+                [$row['publicationCitation'], 'dcterms:bibliographicCitation', 'literal'],
+                [$row['publicationShortTitle'], 'dcterms:title', 'literal'],
+            ];
+
+            $publications[$row['publicationID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('item_sets', $publications);
+        $this->mapTable('pwd_publications', $response->getContent());
     }
 }
 

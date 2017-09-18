@@ -23,6 +23,33 @@ class Pwd
     protected $vocabMembers = [];
 
     /**
+     * Tables to truncate during Omeka reversion.
+     *
+     * @var array
+     */
+    protected $truncateTables = [
+        'api_key',
+        'asset',
+        'item',
+        'item_item_set',
+        'item_set',
+        'job',
+        'media',
+        'module',
+        'password_creation',
+        'resource',
+        'site',
+        'site_block_attachment',
+        'site_item_set',
+        'site_page',
+        'site_page_block',
+        'site_permission',
+        'site_setting',
+        'user_setting',
+        'value',
+    ];
+
+    /**
      * PWD/Omeka mapping tables
      *
      * @var array
@@ -147,6 +174,7 @@ class Pwd
     public function migrate()
     {
         // Prepare migration
+        $this->revertOmeka();
         $this->createMappingTables();
         $this->importVocabs();
         $this->cacheVocabMembers();
@@ -155,6 +183,19 @@ class Pwd
         $this->migrateRepositories();
         $this->migrateCollections();
         $this->migrateMicrofilms();
+    }
+
+    /**
+     * Revert Omeka to a newly installed state.
+     */
+    public function revertOmeka()
+    {
+        $conn = $this->services->get('Omeka\Connection');
+        $conn->exec('SET FOREIGN_KEY_CHECKS = 0');
+        foreach ($this->truncateTables as $table) {
+            $conn->exec(sprintf('TRUNCATE TABLE %s', $table));
+        }
+        $conn->exec('SET FOREIGN_KEY_CHECKS = 1');
     }
 
     /**

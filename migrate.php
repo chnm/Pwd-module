@@ -184,6 +184,7 @@ class Pwd
         $this->migrateCollections();
         $this->migrateMicrofilms();
         $this->migratePublications();
+        $this->migrateNames();
     }
 
     /**
@@ -519,6 +520,44 @@ class Pwd
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('item_sets', $publications);
         $this->mapTable('pwd_publications', $response->getContent());
+    }
+
+    /**
+     * Migrate PWD names into Omeka.
+     */
+    public function migrateNames()
+    {
+        $names = [];
+        foreach ($this->getTable('names') as $row) {
+            $data = [
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['foaf:Person'],
+                ],
+            ];
+
+            $title = [
+                $row['nameTitle'], $row['nameFirst'], $row['nameMiddle'],
+                $row['nameLast'], $row['nameSuffix']
+            ];
+            $title = implode(' ', array_filter(array_map('trim', $title)));
+
+            $mapping = [
+                [$title, 'dcterms:title', 'literal'],
+                [$title, 'foaf:name', 'literal'],
+                [$row['nameTitle'], 'vcard:honorific-prefix', 'literal'],
+                [$row['nameFirst'], 'vcard:given-name', 'literal'],
+                [$row['nameLast'], 'vcard:family-name', 'literal'],
+                [$row['nameSuffix'], 'vcard:honorific-suffix', 'literal'],
+                [$row['nameDescription'], 'dcterms:description', 'literal'],
+                [$row['nameNotes'], 'vcard:note', 'literal'],
+            ];
+
+            $names[$row['nameID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('items', $names);
+        $this->mapTable('pwd_names', $response->getContent());
     }
 }
 

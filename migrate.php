@@ -317,7 +317,8 @@ class Pwd
                 case 'literal':
                 default:
                     $dataValue['type'] = 'literal';
-                    $dataValue['@value'] = $value;
+                    // Encode ISO-8859-1 strings to UTF-8.
+                    $dataValue['@value'] = utf8_encode($value);
             }
             $data[$term][] = $dataValue;
         }

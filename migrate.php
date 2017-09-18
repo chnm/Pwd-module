@@ -358,16 +358,8 @@ class Pwd
             ];
 
             // dcterms:title
-            $title = [];
-            $name1 = trim($row['repositoryName1']);
-            $name2 = trim($row['repositoryName2']);
-            if ($name1) {
-                $title[] = $name1;
-            }
-            if ($name2) {
-                $title[] = $name2;
-            }
-            $title = $title ? implode(': ', $title) : null;
+            $title = [$row['repositoryName1'], $row['repositoryName2']];
+            $title = implode(': ', array_filter(array_map('trim', $title)));
 
             // dcterms:identifier
             // The provided codes don't always match up with the corresponding
@@ -497,16 +489,8 @@ class Pwd
                 ],
             ];
 
-            $creator = [];
-            $firstName = trim($row['publicationAuthorFirstName']);
-            $lastName = trim($row['publicationAuthorLastName']);
-            if ($firstName) {
-                $creator[] = $firstName;
-            }
-            if ($lastName) {
-                $creator[] = $lastName;
-            }
-            $creator = $creator ? implode(' ', $creator) : null;
+            $creator = [$row['publicationAuthorFirstName'], $row['publicationAuthorLastName']];
+            $creator = implode(' ', array_filter(array_map('trim', $creator)));
 
             $mapping = [
                 [$creator, 'dcterms:creator', 'literal'],

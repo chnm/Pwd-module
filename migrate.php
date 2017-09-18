@@ -106,6 +106,19 @@ class Pwd
                 'o:comment' =>  'A vocabulary for defining temporal entities such as time intervals, their properties and relationships.',
             ],
         ],
+        [
+            'strategy' => 'file',
+            'options' => [
+                'file' => __DIR__ . '/pwd.n3',
+                'format' => 'turtle',
+            ],
+            'vocab' => [
+                'o:namespace_uri' => 'http://wardepartmentpapers.org/vocab#',
+                'o:prefix' => 'pwd',
+                'o:label' => 'Papers of the War Department',
+                'o:comment' =>  null,
+            ],
+        ],
     ];
 
     /**
@@ -181,11 +194,20 @@ class Pwd
     {
         $conn = $this->services->get('Omeka\Connection');
         $importer = $this->services->get('Omeka\RdfImporter');
+        $api = $this->services->get('Omeka\ApiManager');
         foreach ($this->vocabs as $vocab) {
             // First check if the vocabulary is already imported.
-            $stmt = $conn->prepare('SELECT 1 FROM vocabulary WHERE namespace_uri = ?');
+            $stmt = $conn->prepare('SELECT id FROM vocabulary WHERE namespace_uri = ?');
             $stmt->execute([$vocab['vocab']['o:namespace_uri']]);
-            if (!$stmt->fetch()) {
+            $id = $stmt->fetchColumn();
+            // Unlike other vocabularies, the PWD vocabulary will change over
+            // the course of development. Delete and re-import it during every
+            // migration.
+            if ($id && 'http://wardepartmentpapers.org/vocab#' === $vocab['vocab']['o:namespace_uri']) {
+                $api->delete('vocabularies', $id);
+                $id = false;
+            }
+            if (!$id) {
                 $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
             }
         }
@@ -287,7 +309,7 @@ class Pwd
             }
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['vcard:Organization'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Repository'],
                 ],
             ];
 
@@ -348,7 +370,7 @@ class Pwd
         foreach ($this->getTable('collections') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
                 ],
             ];
 
@@ -396,7 +418,7 @@ class Pwd
         foreach ($this->getTable('microfilms') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:CollectedDocument'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Microfilm'],
                 ],
             ];
 

@@ -1,0 +1,21 @@
+@prefix : <http://wardepartmentpapers.org/vocab#> .
+@prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+
+:Repository a rdfs:Class ;
+	rdfs:label "Repository"@en ;
+	rdfs:comment ""@en ;
+	rdfs:subClassOf vcard:Organization .
+
+:Collection a rdfs:Class ;
+	rdfs:label "Collection"@en ;
+	rdfs:comment ""@en ;
+	rdfs:subClassOf bibo:Collection .
+
+:Microfilm a rdfs:Class ;
+	rdfs:label "Microfilm"@en ;
+	rdfs:comment ""@en ;
+	rdfs:subClassOf bibo:CollectedDocument .

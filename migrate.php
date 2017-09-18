@@ -357,11 +357,13 @@ class Pwd
 
             // dcterms:title
             $title = [];
-            if ($row['repositoryName1']) {
-                $title[] = $row['repositoryName1'];
+            $name1 = trim($row['repositoryName1']);
+            $name2 = trim($row['repositoryName2']);
+            if ($name1) {
+                $title[] = $name1;
             }
-            if ($row['repositoryName2']) {
-                $title[] = $row['repositoryName2'];
+            if ($name2) {
+                $title[] = $name2;
             }
             $title = $title ? implode(': ', $title) : null;
 
@@ -385,6 +387,7 @@ class Pwd
 
             $mapping = [
                 [$title, 'dcterms:title', 'literal'],
+                [$title, 'foaf:name', 'literal'],
                 [$identifier, 'dcterms:identifier', 'uri'],
                 [$row['repositoryName1'], 'vcard:organization-name', 'literal'],
                 [$row['repositoryName2'], 'vcard:organization-unit', 'literal'],
@@ -412,7 +415,7 @@ class Pwd
         foreach ($this->getTable('collections') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
                 ],
             ];
 
@@ -488,7 +491,7 @@ class Pwd
         foreach ($this->getTable('publications') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
+                    'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
                 ],
             ];
 

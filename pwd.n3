@@ -1,5 +1,6 @@
 @prefix : <http://wardepartmentpapers.org/vocab#> .
 @prefix bibo: <http://purl.org/ontology/bibo/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -9,19 +10,9 @@
 :Repository a rdfs:Class ;
 	rdfs:label "Repository"@en ;
 	rdfs:comment ""@en ;
-	rdfs:subClassOf vcard:Organization .
-
-:Collection a rdfs:Class ;
-	rdfs:label "Collection"@en ;
-	rdfs:comment ""@en ;
-	rdfs:subClassOf bibo:Collection .
+	rdfs:subClassOf foaf:Organization .
 
 :Microfilm a rdfs:Class ;
 	rdfs:label "Microfilm"@en ;
 	rdfs:comment ""@en ;
 	rdfs:subClassOf bibo:CollectedDocument .
-
-:Publication a rdfs:Class ;
-	rdfs:label "Publication"@en ;
-	rdfs:comment ""@en ;
-	rdfs:subClassOf dcterms:BibliographicResource .

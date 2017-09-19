@@ -7,27 +7,10 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
 
-:Repository a rdfs:Class ;
-    rdfs:label "Repository"@en ;
-    rdfs:comment "A repository from which War Department papers were derived."@en ;
-    rdfs:subClassOf foaf:Organization .
+:createdNote a rdf:Property ;
+    rdfs:label "created note"@en ;
+    rdfs:comment "A note about a a created date."@en .
 
-:Collection a rdfs:Class ;
-    rdfs:label "Collection"@en ;
-    rdfs:comment "A collection from which War Department papers were derived."@en ;
-    rdfs:subClassOf bibo:Collection .
-
-:Microfilm a rdfs:Class ;
-    rdfs:label "Microfilm"@en ;
-    rdfs:comment "A microfilm from which War Department papers were derived."@en ;
-    rdfs:subClassOf bibo:CollectedDocument .
-
-:Publication a rdfs:Class ;
-    rdfs:label "Publication"@en ;
-    rdfs:comment "A publication from which War Department papers were derived."@en ;
-    rdfs:subClassOf dcterms:BibliographicResource .
-
-:Person a rdfs:Class ;
-    rdfs:label "Person"@en ;
-    rdfs:comment "A person referenced within War Department papers."@en ;
-    rdfs:subClassOf foaf:Person .
+:note a rdf:Property ;
+    rdfs:label "note"@en ;
+    rdfs:comment "A note about a Papers of the War Department resource."@en .

@@ -23,7 +23,36 @@ class Pwd
     protected $vocabMembers = [];
 
     /**
-     * Tables to truncate during Omeka reversion.
+     * Cache of PWD/Omeka identifier mappings
+     *
+     * @var array
+     */
+    protected $mappings = [];
+
+    /**
+     * Cache of Omeka item sets
+     *
+     * @var array
+     */
+    protected $itemSets = [];
+
+    /**
+     * Do not migrate these special PWD repositories (no data to save).
+     *
+     * Each have corresponding PWD collections:
+     *
+     * - CITE (3) => Cite only--no image (422)
+     * - PRINT (26) => Printed Version only (9)
+     * - TYPED (209) => Typed Version only (13)
+     * - HAND (210) => Handwritten Transcript only (150)
+     * - LISTED (232) => Document listed in Syrett's appendicies (800)
+     *
+     * @var array
+     */
+    protected $excludeRepositories = [3, 26, 209, 210, 232];
+
+    /**
+     * Tables to truncate during Omeka reversion
      *
      * @var array
      */
@@ -50,43 +79,19 @@ class Pwd
     ];
 
     /**
-     * PWD/Omeka mapping tables
+     * PWD/Omeka identifier mapping tables
      *
      * @var array
      */
     protected $mappingTables = [
-        // mapped to item sets
         'pwd_collections',
         'pwd_microfilms',
         'pwd_publications',
-        // mapped to items
         'pwd_repositories',
         'pwd_names',
         'pwd_documents',
         'pwd_images',
     ];
-
-    /**
-     * Cache of PWD/Omeka identifier mappings
-     *
-     * @var array
-     */
-    protected $mappings = [];
-
-    /**
-     * Do not migrate these special PWD repositories (no data to save).
-     *
-     * Each have corresponding PWD collections:
-     *
-     * - CITE (3) => Cite only--no image (422)
-     * - PRINT (26) => Printed Version only (9)
-     * - TYPED (209) => Typed Version only (13)
-     * - HAND (210) => Handwritten Transcript only (150)
-     * - LISTED (232) => Document listed in Syrett's appendicies (800)
-     *
-     * @var array
-     */
-    protected $excludeRepositories = [3, 26, 209, 210, 232];
 
     /**
      * Vocabularies to import
@@ -149,6 +154,38 @@ class Pwd
     ];
 
     /**
+     * Item sets to create
+     *
+     * @var array
+     */
+    protected $itemSetMappings = [
+        'repositories' => [
+            ['Repositories', 'dcterms:title', 'literal'],
+            ['Repositories from which War Department documents were derived.', 'dcterms:description', 'literal'],
+        ],
+        'collections' => [
+            ['Collections', 'dcterms:title', 'literal'],
+            ['Collections from which War Department documents were derived.', 'dcterms:description', 'literal'],
+        ],
+        'microfilms' => [
+            ['Microfilms', 'dcterms:title', 'literal'],
+            ['Microfilms from which War Department documents were derived.', 'dcterms:description', 'literal'],
+        ],
+        'publications' => [
+            ['Publications', 'dcterms:title', 'literal'],
+            ['Publications from which War Department documents were derived.', 'dcterms:description', 'literal'],
+        ],
+        'names' => [
+            ['Names', 'dcterms:title', 'literal'],
+            ['Names referenced within War Department documents.', 'dcterms:description', 'literal'],
+        ],
+        'documents' => [
+            ['Documents', 'dcterms:title', 'literal'],
+            ['War Department documents.', 'dcterms:description', 'literal'],
+        ],
+    ];
+
+    /**
      * @param string $dbHost PWD database host
      * @param string $dbName PWD database name
      * @param string $dbUsername PWD database username
@@ -178,6 +215,7 @@ class Pwd
         $this->createMappingTables();
         $this->importVocabs();
         $this->cacheVocabMembers();
+        $this->createItemSets();
 
         // Migrate
         $this->migrateRepositories();
@@ -198,22 +236,6 @@ class Pwd
             $conn->exec(sprintf('TRUNCATE TABLE %s', $table));
         }
         $conn->exec('SET FOREIGN_KEY_CHECKS = 1');
-    }
-
-    /**
-     * Cache vocabulary members (classes and properties).
-     */
-    public function cacheVocabMembers()
-    {
-        foreach (['resource_class', 'property'] as $member) {
-            $conn = $this->services->get('Omeka\Connection');
-            $sql = 'SELECT m.id, m.local_name, v.prefix FROM %s m JOIN vocabulary v ON m.vocabulary_id = v.id';
-            $stmt = $conn->query(sprintf($sql, $member));
-            $this->vocabMembers[$member] = [];
-            foreach ($stmt as $row) {
-                $this->vocabMembers[$member][sprintf('%s:%s', $row['prefix'], $row['local_name'])] = $row['id'];
-            }
-        }
     }
 
     /**
@@ -253,6 +275,38 @@ class Pwd
             if (!$id) {
                 $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
             }
+        }
+    }
+
+    /**
+     * Cache vocabulary members (classes and properties).
+     */
+    public function cacheVocabMembers()
+    {
+        foreach (['resource_class', 'property'] as $member) {
+            $conn = $this->services->get('Omeka\Connection');
+            $sql = 'SELECT m.id, m.local_name, v.prefix FROM %s m JOIN vocabulary v ON m.vocabulary_id = v.id';
+            $stmt = $conn->query(sprintf($sql, $member));
+            $this->vocabMembers[$member] = [];
+            foreach ($stmt as $row) {
+                $this->vocabMembers[$member][sprintf('%s:%s', $row['prefix'], $row['local_name'])] = $row['id'];
+            }
+        }
+    }
+
+    /**
+     * Create item sets needed for PWD migration.
+     */
+    public function createItemSets()
+    {
+        $itemSets = [];
+        foreach ($this->itemSetMappings as $key => $mapping) {
+            $itemSets[$key] = $this->addValues([], $mapping);
+        }
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('item_sets', $itemSets);
+        foreach ($response->getContent() as $key => $itemSet) {
+            $this->itemSets[$key] = $itemSet->id();
         }
     }
 
@@ -352,8 +406,11 @@ class Pwd
                 continue;
             }
             $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['repositories'],
+                ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Repository'],
+                    'o:id' => $this->vocabMembers['resource_class']['foaf:Organization'],
                 ],
             ];
 
@@ -408,8 +465,11 @@ class Pwd
         $collections = [];
         foreach ($this->getTable('collections') as $row) {
             $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['collections'],
+                ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
                 ],
             ];
 
@@ -435,8 +495,7 @@ class Pwd
                 [$title, 'dcterms:title', 'literal'],
                 [$shortTitle, 'bibo:shortTitle', 'literal'],
             ];
-            // PWD collections without a repository: 1, 821. Do not assign
-            // excluded repositories.
+            // PWD collections without a repository: 1, 821. Do not assign excluded repositories.
             if ($row['repositoryID'] && !in_array($row['repositoryID'], $this->excludeRepositories)) {
                 $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'dcterms:publisher', 'resource'];
             }
@@ -444,7 +503,7 @@ class Pwd
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('item_sets', $collections);
+        $response = $api->batchCreate('items', $collections);
         $this->mapTable('pwd_collections', $response->getContent());
     }
 
@@ -456,8 +515,11 @@ class Pwd
         $microfilms = [];
         foreach ($this->getTable('microfilms') as $row) {
             $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['microfilms'],
+                ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Microfilm'],
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:CollectedDocument'],
                 ],
             ];
 
@@ -465,6 +527,7 @@ class Pwd
                 [$row['microfilmCitation'], 'dcterms:bibliographicCitation', 'literal'],
                 [$row['microfilmShortTitle'], 'dcterms:title', 'literal'],
             ];
+            // PWD microfilms without a repository: 55-70,72-81,84-92,96-111,116-120,128
             if ($row['repositoryID']) {
                 $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'dcterms:publisher', 'resource'];
             }
@@ -472,7 +535,7 @@ class Pwd
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('item_sets', $microfilms);
+        $response = $api->batchCreate('items', $microfilms);
         $this->mapTable('pwd_microfilms', $response->getContent());
     }
 
@@ -484,8 +547,11 @@ class Pwd
         $publications = [];
         foreach ($this->getTable('publications') as $row) {
             $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['publications'],
+                ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
+                    'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
                 ],
             ];
 
@@ -503,7 +569,7 @@ class Pwd
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('item_sets', $publications);
+        $response = $api->batchCreate('items', $publications);
         $this->mapTable('pwd_publications', $response->getContent());
     }
 
@@ -515,8 +581,11 @@ class Pwd
         $names = [];
         foreach ($this->getTable('names') as $row) {
             $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['names'],
+                ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Person'],
+                    'o:id' => $this->vocabMembers['resource_class']['foaf:Agent'],
                 ],
             ];
 

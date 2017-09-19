@@ -9,13 +9,41 @@
 
 # Properties
 
-:createdNote a rdf:Property ;
-    rdfs:label "created note"@en ;
-    rdfs:comment "A note about a a created date."@en .
-
 :note a rdf:Property ;
     rdfs:label "note"@en ;
     rdfs:comment "A note about a Papers of the War Department resource."@en .
+
+:createdNote a rdf:Property ;
+    rdfs:label "created note"@en ;
+    rdfs:comment "A note about a created date."@en .
+
+:citedNote a rdf:Property ;
+    rdfs:label "cited note"@en ;
+    rdfs:comment "A note about a cited document."@en .
+
+:contentNote a rdf:Property ;
+    rdfs:label "content note"@en ;
+    rdfs:comment "A note about the content of a document."@en .
+
+:notableAgent a rdf:Property ;
+    rdfs:label "notable agent"@en ;
+    rdfs:comment "A notable person/organization/group referenced in a document."@en .
+
+:notableLocation a rdf:Property ;
+    rdfs:label "notable location"@en ;
+    rdfs:comment "A notable location referenced in a document."@en .
+
+:notableItemThing a rdf:Property ;
+    rdfs:label "notable item/thing"@en ;
+    rdfs:comment "A notable item/thing referenced in a document."@en .
+
+:notableIdeaIssue a rdf:Property ;
+    rdfs:label "notable idea/issue"@en ;
+    rdfs:comment "A notable idea/issue referenced in a document."@en .
+
+:notablePhrase a rdf:Property ;
+    rdfs:label "notable phrase"@en ;
+    rdfs:comment "A notable phrase referenced in a document."@en .
 
 # Classes (document formats)
 

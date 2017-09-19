@@ -308,6 +308,7 @@ class Pwd
         $this->migrateMicrofilms();
         $this->migratePublications();
         $this->migrateNames();
+        $this->migrateDocuments();
     }
 
     /**
@@ -716,6 +717,74 @@ class Pwd
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('items', $names);
         $this->mapTable('pwd_names', $response->getContent());
+    }
+
+    /**
+     * Migrate PWD documents into Omeka.
+     */
+    public function migrateDocuments()
+    {
+        $citeCodes = [];
+        foreach ($this->getTable('citeCodes') as $row) {
+            $citeCodes[$row['citeCodeID']] = $row['citeCodeName'];
+        }
+
+        $documents = [];
+        foreach ($this->getTable('documents') as $row) {
+            $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['documents'],
+                ],
+            ];
+            if ($row['documentFormatID']) {
+                $documentFormat = sprintf('pwd:%s', $this->documentFormats[$row['documentFormatID']][0]);
+                $data['o:resource_class'] = [
+                    'o:id' => $this->vocabMembers['resource_class'][$documentFormat],
+                ];
+            }
+
+            $mapping = [
+                [$row['documentImagePageNumber'], 'bibo:pageStart', 'literal'],
+                [$row['documentDate'], 'dcterms:created', 'literal'],
+                [$row['documentDateYear'], 't:year', 'literal'],
+                [$row['documentDateMonth'], 't:month', 'literal'],
+                [$row['documentDateDay'], 't:day', 'literal'],
+                [$row['documentDateNotes'], 'pwd:createdNote', 'literal'],
+                [$row['documentOtherAuthors'], 'dcterms:creator', 'literal'],
+                [$row['documentOtherRecipients'], 'bibo:recipient', 'literal'],
+                [$row['documentTitle'], 'dcterms:title', 'literal'],
+                [$row['documentNotes'], 'pwd:note', 'literal'],
+                [$row['documentPageCount'], 'bibo:numPages', 'literal'],
+                [$row['documentFullGist'], 'dcterms:description', 'literal'],
+                [$row['documentShortGist'], 'bibo:shortDescription', 'literal'],
+                [$row['documentContentNotes'], 'pwd:contentNote', 'literal'],
+            ];
+
+            if ($row['documentCiteCodeID']) {
+                $mapping[] = [$citeCodes[$row['documentCiteCodeID']], 'pwd:citedNote', 'literal'];
+            }
+            foreach (explode(';', $row['documentPersonsGroups']) as $value) {
+                $mapping[] = [$value, 'pwd:notableAgent', 'literal'];
+            }
+            foreach (explode(';', $row['documentLocations']) as $value) {
+                $mapping[] = [$value, 'pwd:notableLocation', 'literal'];
+            }
+            foreach (explode(';', $row['documentItemsThings']) as $value) {
+                $mapping[] = [$value, 'pwd:notableItemThing', 'literal'];
+            }
+            foreach (explode(';', $row['documentIdeasIssuesEtc']) as $value) {
+                $mapping[] = [$value, 'pwd:notableIdeaIssue', 'literal'];
+            }
+            foreach (explode(';', $row['documentPhrases']) as $value) {
+                $mapping[] = [$value, 'pwd:notablePhrase', 'literal'];
+            }
+
+            $documents[$row['documentID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('items', $documents);
+        $this->mapTable('pwd_documents', $response->getContent());
     }
 }
 

@@ -409,7 +409,7 @@ class Pwd
         foreach ($this->getTable('collections') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
                 ],
             ];
 
@@ -485,7 +485,7 @@ class Pwd
         foreach ($this->getTable('publications') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
                 ],
             ];
 
@@ -516,7 +516,7 @@ class Pwd
         foreach ($this->getTable('names') as $row) {
             $data = [
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['foaf:Person'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Person'],
                 ],
             ];
 

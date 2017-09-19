@@ -8,11 +8,26 @@
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
 
 :Repository a rdfs:Class ;
-	rdfs:label "Repository"@en ;
-	rdfs:comment ""@en ;
-	rdfs:subClassOf foaf:Organization .
+    rdfs:label "Repository"@en ;
+    rdfs:comment "A repository from which War Department papers were derived."@en ;
+    rdfs:subClassOf foaf:Organization .
+
+:Collection a rdfs:Class ;
+    rdfs:label "Collection"@en ;
+    rdfs:comment "A collection from which War Department papers were derived."@en ;
+    rdfs:subClassOf bibo:Collection .
 
 :Microfilm a rdfs:Class ;
-	rdfs:label "Microfilm"@en ;
-	rdfs:comment ""@en ;
-	rdfs:subClassOf bibo:CollectedDocument .
+    rdfs:label "Microfilm"@en ;
+    rdfs:comment "A microfilm from which War Department papers were derived."@en ;
+    rdfs:subClassOf bibo:CollectedDocument .
+
+:Publication a rdfs:Class ;
+    rdfs:label "Publication"@en ;
+    rdfs:comment "A publication from which War Department papers were derived."@en ;
+    rdfs:subClassOf dcterms:BibliographicResource .
+
+:Person a rdfs:Class ;
+    rdfs:label "Person"@en ;
+    rdfs:comment "A person referenced within War Department papers."@en ;
+    rdfs:subClassOf foaf:Person .

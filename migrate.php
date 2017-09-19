@@ -213,7 +213,7 @@ class Pwd
         54 => ['LetterFragment', 'Letter fragment'],
         26 => ['LetterManuscriptTranslated', 'Manuscript Translation of Letter'],
         40 => ['LetterModernCopyTranscribed', 'Printed transcription/modern copy of letter'],
-        37 => ['LetterPrintedPublished ', 'Printed or published letter'],
+        37 => ['LetterPrintedPublished', 'Printed or published letter'],
         1 =>  ['LetterSigned', 'Letter Signed'],
         41 => ['LetterTranslated', 'Translation (Contemporary or Modern) of Letter'],
         58 => ['LetterTranslated2', 'Translated letter (implies transcription)'],

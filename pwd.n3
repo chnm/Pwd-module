@@ -91,8 +91,8 @@
     rdfs:label "Letter Modern Copy Transcribed"@en ;
     rdfs:comment "Printed transcription/modern copy of letter"@en .
 
-:LetterPrintedPublished  a rdfs:Class ;
-    rdfs:label "Letter Printed Published "@en ;
+:LetterPrintedPublished a rdfs:Class ;
+    rdfs:label "Letter Printed Published"@en ;
     rdfs:comment "Printed or published letter"@en .
 
 :LetterSigned a rdfs:Class ;

@@ -291,28 +291,6 @@ class Pwd
     }
 
     /**
-     * Perform the migration.
-     */
-    public function migrate()
-    {
-        // Prepare migration
-        $this->revertOmeka();
-        $this->createMappingTables();
-        $this->createTranscriptionTable();
-        $this->importVocabs();
-        $this->cacheVocabMembers();
-        $this->createItemSets();
-
-        // Migrate
-        $this->migrateRepositories();
-        $this->migrateCollections();
-        $this->migrateMicrofilms();
-        $this->migratePublications();
-        $this->migrateNames();
-        $this->migrateDocuments();
-    }
-
-    /**
      * Print document formats in RDF turtle format (N3).
      *
      * Pipe output to "xclip -selection clipboard" to cut-and-paste.
@@ -345,10 +323,11 @@ class Pwd
     }
 
     /**
-     * Create PWD/Omeka mapping tables.
+     * Create Omeka tables needed for PWD migration.
      */
-    public function createMappingTables()
+    public function createTables()
     {
+        // Create PWD/Omeka mapping tables.
         $conn = $this->services->get('Omeka\Connection');
         $sql = sprintf('DROP TABLE IF EXISTS %s', implode(',', $this->mappingTables));
         $conn->exec($sql);
@@ -356,13 +335,8 @@ class Pwd
             $sql = sprintf('CREATE TABLE %s (id_pwd int(11) NOT NULL, id_omeka int(11) NOT NULL)', $table);
             $conn->exec($sql);
         }
-    }
 
-    /**
-     * Create document transcription table.
-     */
-    public function createTranscriptionTable()
-    {
+        // Create document transcription table.
         $conn = $this->services->get('Omeka\Connection');
         $conn->exec('DROP TABLE IF EXISTS pwd_transcriptions');
         $conn->exec('CREATE TABLE pwd_transcriptions (id_omeka int(11) NOT NULL, nominate tinyint(1) DEFAULT NULL)');
@@ -395,9 +369,9 @@ class Pwd
     }
 
     /**
-     * Cache vocabulary members (classes and properties).
+     * Cache vocabularies (classes and properties).
      */
-    public function cacheVocabMembers()
+    public function cacheVocabs()
     {
         foreach (['resource_class', 'property'] as $member) {
             $conn = $this->services->get('Omeka\Connection');
@@ -732,8 +706,10 @@ class Pwd
 
     /**
      * Migrate PWD documents into Omeka.
+     *
+     * @param int $limit Limit documents for testing
      */
-    public function migrateDocuments()
+    public function migrateDocuments($limit = null)
     {
         $citeCodes = [];
         foreach ($this->getTable('citeCodes') as $row) {
@@ -742,7 +718,9 @@ class Pwd
 
         $documents = [];
         $transcriptionData = [];
-        foreach ($this->getTable('documents') as $row) {
+        foreach ($this->getTable('documents') as $index => $row) {
+            if (is_numeric($limit) && $limit <= $index) break;
+
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['documents'],
@@ -817,6 +795,41 @@ class Pwd
 }
 
 require 'config.php';
+
+$timeStart = microtime(true);
+printf("Execution started: %s\n", date('c'));
+echo "------------------------------\n";
+
+echo "Initializing...\n";
 $pwd = new Pwd(PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_OMEKA_PATH);
-//~ $pwd->printDocumentFormatsN3();
-$pwd->migrate();
+
+// Prepare migration
+echo "Reverting Omeka...\n";
+$pwd->revertOmeka();
+echo "Creating tables...\n";
+$pwd->createTables();
+echo "Importing vocabularies...\n";
+$pwd->importVocabs();
+echo "Caching vocabularies...\n";
+$pwd->cacheVocabs();
+echo "Creating item sets...\n";
+$pwd->createItemSets();
+
+// Migrate
+echo "Migrating repositories...\n";
+$pwd->migrateRepositories();
+echo "Migrating collections...\n";
+$pwd->migrateCollections();
+echo "Migrating microfilms...\n";
+$pwd->migrateMicrofilms();
+echo "Migrating publications...\n";
+$pwd->migratePublications();
+echo "Migrating names...\n";
+$pwd->migrateNames();
+echo "Migrating documents...\n";
+$pwd->migrateDocuments(1000);
+
+echo "------------------------------\n";
+printf("Total execution time: %s seconds\n", round(microtime(true) - $timeStart));
+printf("Peak memory usage: %s MB\n", round(memory_get_peak_usage() / 1048576));
+printf("Execution ended: %s\n", date('c'));

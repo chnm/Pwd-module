@@ -298,6 +298,7 @@ class Pwd
         // Prepare migration
         $this->revertOmeka();
         $this->createMappingTables();
+        $this->createTranscriptionTable();
         $this->importVocabs();
         $this->cacheVocabMembers();
         $this->createItemSets();
@@ -355,6 +356,16 @@ class Pwd
             $sql = sprintf('CREATE TABLE %s (id_pwd int(11) NOT NULL, id_omeka int(11) NOT NULL)', $table);
             $conn->exec($sql);
         }
+    }
+
+    /**
+     * Create document transcription table.
+     */
+    public function createTranscriptionTable()
+    {
+        $conn = $this->services->get('Omeka\Connection');
+        $conn->exec('DROP TABLE IF EXISTS pwd_transcriptions');
+        $conn->exec('CREATE TABLE pwd_transcriptions (id_omeka int(11) NOT NULL, nominate tinyint(1) DEFAULT NULL)');
     }
 
     /**
@@ -730,6 +741,7 @@ class Pwd
         }
 
         $documents = [];
+        $transcriptionData = [];
         foreach ($this->getTable('documents') as $row) {
             $data = [
                 'o:item_set' => [
@@ -758,6 +770,7 @@ class Pwd
                 [$row['documentFullGist'], 'dcterms:description', 'literal'],
                 [$row['documentShortGist'], 'bibo:shortDescription', 'literal'],
                 [$row['documentContentNotes'], 'pwd:contentNote', 'literal'],
+                [$row['documentTranscription'], 'bibo:content', 'literal'],
             ];
 
             if ($row['documentCiteCodeID']) {
@@ -780,11 +793,26 @@ class Pwd
             }
 
             $documents[$row['documentID']] = $this->addValues($data, $mapping);
+            $transcriptionData[$row['documentID']] = $row['documentNominateForTranscription'];
         }
 
         $api = $this->services->get('Omeka\ApiManager');
         $response = $api->batchCreate('items', $documents);
         $this->mapTable('pwd_documents', $response->getContent());
+
+        // Map and save document transcription data.
+        $insertValues = [];
+        foreach ($response->getContent() as $key => $value) {
+            $insertValues[] = $key;
+            $insertValues[] = $transcriptionData[$key];
+        }
+        $sql = sprintf(
+            'INSERT INTO pwd_transcriptions (id_omeka, nominate) VALUES %s',
+            implode(', ', array_fill(0, count($response->getContent()), '(?, ?)'))
+        );
+        $conn = $this->services->get('Omeka\Connection');
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($insertValues);
     }
 }
 

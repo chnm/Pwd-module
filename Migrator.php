@@ -26,6 +26,13 @@ class Migrator
     protected $vocabMembers = [];
 
     /**
+     * Cache of reification table data.
+     *
+     * @var array
+     */
+    protected $reificationData = [];
+
+    /**
      * Cache of PWD/Omeka identifier mappings
      *
      * @var array
@@ -94,6 +101,18 @@ class Migrator
         'pwd_names',
         'pwd_documents',
         'pwd_images',
+    ];
+
+    /**
+     * PWD reification tables
+     *
+     * @var array
+     */
+    protected $reificationTables = [
+        'documents_collections',
+        'documents_microfilms',
+        'documents_names',
+        'documents_publications',
     ];
 
     /**
@@ -384,10 +403,11 @@ class Migrator
     }
 
     /**
-     * Cache vocabularies (classes and properties).
+     * Cache data.
      */
-    public function cacheVocabs()
+    public function cacheData()
     {
+        // Cache vocabulary data (classes and properties).
         foreach (['resource_class', 'property'] as $member) {
             $conn = $this->services->get('Omeka\Connection');
             $sql = 'SELECT m.id, m.local_name, v.prefix FROM %s m JOIN vocabulary v ON m.vocabulary_id = v.id';
@@ -395,6 +415,13 @@ class Migrator
             $this->vocabMembers[$member] = [];
             foreach ($stmt as $row) {
                 $this->vocabMembers[$member][sprintf('%s:%s', $row['prefix'], $row['local_name'])] = $row['id'];
+            }
+        }
+
+        // Cache reification data
+        foreach ($this->reificationTables as $table) {
+            foreach ($this->getTable($table) as $row) {
+                $this->reificationData[$table][] = $row;
             }
         }
     }

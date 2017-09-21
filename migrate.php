@@ -15,8 +15,8 @@ echo "Creating tables...\n";
 $migrator->createTables();
 echo "Importing vocabularies...\n";
 $migrator->importVocabs();
-echo "Caching vocabularies...\n";
-$migrator->cacheVocabs();
+echo "Caching data...\n";
+$migrator->cacheData();
 echo "Creating item sets...\n";
 $migrator->createItemSets();
 

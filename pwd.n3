@@ -9,9 +9,13 @@
 
 # Properties
 
+:documentNumber a rdf:Property ;
+    rdfs:label "document number"@en ;
+    rdfs:comment "A legacy document identifier."@en .
+
 :note a rdf:Property ;
     rdfs:label "note"@en ;
-    rdfs:comment "A note about a Papers of the War Department resource."@en .
+    rdfs:comment "A note about a resource."@en .
 
 :createdNote a rdf:Property ;
     rdfs:label "created note"@en ;

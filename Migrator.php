@@ -749,6 +749,7 @@ class Migrator
             }
 
             $mapping = [
+                [$row['documentNumber'], 'pwd:documentNumber', 'literal'],
                 [$row['documentImagePageNumber'], 'bibo:pageStart', 'literal'],
                 [$row['documentDate'], 'dcterms:created', 'literal'],
                 [$row['documentDateYear'], 't:year', 'literal'],

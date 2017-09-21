@@ -330,8 +330,9 @@ class Migrator
      */
     public function createTables()
     {
-        // Create PWD/Omeka mapping tables.
         $conn = $this->services->get('Omeka\Connection');
+
+        // Create PWD/Omeka mapping tables.
         $sql = sprintf('DROP TABLE IF EXISTS %s', implode(',', $this->mappingTables));
         $conn->exec($sql);
         foreach ($this->mappingTables as $table) {
@@ -340,9 +341,20 @@ class Migrator
         }
 
         // Create document transcription table.
-        $conn = $this->services->get('Omeka\Connection');
         $conn->exec('DROP TABLE IF EXISTS pwd_transcriptions');
         $conn->exec('CREATE TABLE pwd_transcriptions (id_omeka int(11) NOT NULL, nominate tinyint(1) DEFAULT NULL)');
+
+        // Create documents/names reification table.
+        $conn->exec('DROP TABLE IF EXISTS pwd_document_name');
+        $conn->exec('CREATE TABLE pwd_document_name (
+            document_id int(11) NOT NULL,
+            name_id int(11) NOT NULL,
+            is_author tinyint(1) DEFAULT NULL,
+            is_recipient tinyint(1) DEFAULT NULL,
+            is_primary tinyint(1) DEFAULT NULL,
+            location TEXT COLLATE utf8mb4_unicode_ci,
+            notes TEXT COLLATE utf8mb4_unicode_ci
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     }
 
     /**

@@ -743,8 +743,6 @@ class Migrator
                 [$row['documentDateMonth'], 't:month', 'literal'],
                 [$row['documentDateDay'], 't:day', 'literal'],
                 [$row['documentDateNotes'], 'pwd:createdNote', 'literal'],
-                [$row['documentOtherAuthors'], 'dcterms:creator', 'literal'],
-                [$row['documentOtherRecipients'], 'bibo:recipient', 'literal'],
                 [$row['documentTitle'], 'dcterms:title', 'literal'],
                 [$row['documentNotes'], 'pwd:note', 'literal'],
                 [$row['documentPageCount'], 'bibo:numPages', 'literal'],
@@ -756,6 +754,12 @@ class Migrator
 
             if ($row['documentCiteCodeID']) {
                 $mapping[] = [$citeCodes[$row['documentCiteCodeID']], 'pwd:citedNote', 'literal'];
+            }
+            foreach (explode(';', $row['documentOtherAuthors']) as $value) {
+                $mapping[] = [$value, 'pwd:additionalCreator', 'literal'];
+            }
+            foreach (explode(';', $row['documentOtherRecipients']) as $value) {
+                $mapping[] = [$value, 'pwd:additionalRecipient', 'literal'];
             }
             foreach (explode(';', $row['documentPersonsGroups']) as $value) {
                 $mapping[] = [$value, 'pwd:notableAgent', 'literal'];

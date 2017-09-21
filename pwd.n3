@@ -25,6 +25,14 @@
     rdfs:label "content note"@en ;
     rdfs:comment "A note about the content of a document."@en .
 
+:additionalCreator a rdf:Property ;
+    rdfs:label "additional creator"@en ;
+    rdfs:comment "An additional document creator (author)."@en .
+
+:additionalRecipient a rdf:Property ;
+    rdfs:label "additional recipient"@en ;
+    rdfs:comment "An additional document recipient."@en .
+
 :notableAgent a rdf:Property ;
     rdfs:label "notable agent"@en ;
     rdfs:comment "A notable person/organization/group referenced in a document."@en .

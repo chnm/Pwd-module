@@ -408,8 +408,8 @@ class Migrator
     public function cacheData()
     {
         // Cache vocabulary data (classes and properties).
+        $conn = $this->services->get('Omeka\Connection');
         foreach (['resource_class', 'property'] as $member) {
-            $conn = $this->services->get('Omeka\Connection');
             $sql = 'SELECT m.id, m.local_name, v.prefix FROM %s m JOIN vocabulary v ON m.vocabulary_id = v.id';
             $stmt = $conn->query(sprintf($sql, $member));
             $this->vocabMembers[$member] = [];

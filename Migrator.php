@@ -109,9 +109,9 @@ class Migrator
      * @var array
      */
     protected $reificationTables = [
+        'documents_names',
         'documents_collections',
         'documents_microfilms',
-        'documents_names',
         'documents_publications',
     ];
 
@@ -421,7 +421,7 @@ class Migrator
         // Cache reification data
         foreach ($this->reificationTables as $table) {
             foreach ($this->getTable($table) as $row) {
-                $this->reificationData[$table][] = $row;
+                $this->reificationData[$table][$row['documentID']][] = $row;
             }
         }
     }
@@ -790,16 +790,12 @@ class Migrator
                 [$row['documentShortGist'], 'bibo:shortDescription', 'literal'],
                 [$row['documentContentNotes'], 'pwd:contentNote', 'literal'],
                 [$row['documentTranscription'], 'bibo:content', 'literal'],
+                [$row['documentOtherAuthors'], 'pwd:authorNote', 'literal'],
+                [$row['documentOtherRecipients'], 'pwd:recipientNote', 'literal']
             ];
 
             if ($row['documentCiteCodeID']) {
                 $mapping[] = [$citeCodes[$row['documentCiteCodeID']], 'pwd:citedNote', 'literal'];
-            }
-            foreach (explode(';', $row['documentOtherAuthors']) as $value) {
-                $mapping[] = [$value, 'pwd:additionalCreator', 'literal'];
-            }
-            foreach (explode(';', $row['documentOtherRecipients']) as $value) {
-                $mapping[] = [$value, 'pwd:additionalRecipient', 'literal'];
             }
             foreach (explode(';', $row['documentPersonsGroups']) as $value) {
                 $mapping[] = [$value, 'pwd:notableAgent', 'literal'];
@@ -815,6 +811,39 @@ class Migrator
             }
             foreach (explode(';', $row['documentPhrases']) as $value) {
                 $mapping[] = [$value, 'pwd:notablePhrase', 'literal'];
+            }
+
+            // Map resources. Note that we don't map resources that don't exist.
+            $names = $this->reificationData['documents_names'][$row['documentID']] ?? [];
+            foreach ($names as $value) {
+                $oNameId = $this->mappings['pwd_names'][$value['nameID']] ?? null;
+                if ($oNameId) {
+                    $term = $value['author']
+                        ? ($value['primaryName'] ? 'dcterms:creator' : 'pwd:secondaryAuthor')
+                        : ($value['primaryName'] ? 'bibo:recipient' : 'pwd:secondaryRecipient');
+                    $mapping[] = [$oNameId, $term, 'resource'];
+                }
+            }
+            $collections = $this->reificationData['documents_collections'][$row['documentID']] ?? [];
+            foreach ($collections as $value) {
+                $oCollectionId = $this->mappings['pwd_collections'][$value['collectionID']] ?? null;
+                if ($oCollectionId) {
+                    $mapping[] = [$oCollectionId, 'pwd:collection', 'resource'];
+                }
+            }
+            $microfilms = $this->reificationData['documents_microfilms'][$row['documentID']] ?? [];
+            foreach ($microfilms as $value) {
+                $oMicrofilmId = $this->mappings['pwd_microfilms'][$value['microfilmID']] ?? null;
+                if ($oMicrofilmId) {
+                    $mapping[] = [$oMicrofilmId, 'pwd:microfilm', 'resource'];
+                }
+            }
+            $publications = $this->reificationData['documents_publications'][$row['documentID']] ?? [];
+            foreach ($publications as $value) {
+                $oPublicationId = $this->mappings['pwd_publications'][$value['publicationID']] ?? null;
+                if ($oPublicationId) {
+                    $mapping[] = [$oPublicationId, 'pwd:publication', 'resource'];
+                }
             }
 
             $documents[$row['documentID']] = $this->addValues($data, $mapping);

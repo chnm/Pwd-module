@@ -13,6 +13,28 @@
     rdfs:label "document number"@en ;
     rdfs:comment "A legacy document identifier."@en .
 
+:secondaryAuthor a rdf:Property ;
+    rdfs:label "secondary author"@en ;
+    rdfs:comment "A secondary author of a document."@en ;
+    rdfs:subClassOf dcterms:creator .
+
+:secondaryRecipient a rdf:Property ;
+    rdfs:label "secondary recipient"@en ;
+    rdfs:comment "A secondary recipient of a document."@en ;
+    rdfs:subClassOf bibo:recipient .
+
+:collection a rdf:Property ;
+    rdfs:label "collection"@en ;
+    rdfs:comment "The document was found within this collection."@en .
+
+:microfilm a rdf:Property ;
+    rdfs:label "microfilm"@en ;
+    rdfs:comment "The document was found within this microfilm."@en .
+
+:publication a rdf:Property ;
+    rdfs:label "publication"@en ;
+    rdfs:comment "The document was found within this publication."@en .
+
 :note a rdf:Property ;
     rdfs:label "note"@en ;
     rdfs:comment "A note about a resource."@en .
@@ -29,13 +51,13 @@
     rdfs:label "content note"@en ;
     rdfs:comment "A note about the content of a document."@en .
 
-:additionalCreator a rdf:Property ;
-    rdfs:label "additional creator"@en ;
-    rdfs:comment "An additional document creator (author)."@en .
+:authorNote a rdf:Property ;
+    rdfs:label "author note"@en ;
+    rdfs:comment "A note about the authors of a document."@en .
 
-:additionalRecipient a rdf:Property ;
-    rdfs:label "additional recipient"@en ;
-    rdfs:comment "An additional document recipient."@en .
+:recipientNote a rdf:Property ;
+    rdfs:label "recipient note"@en ;
+    rdfs:comment "A note about the recipients of a document."@en .
 
 :notableAgent a rdf:Property ;
     rdfs:label "notable agent"@en ;

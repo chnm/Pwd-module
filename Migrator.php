@@ -104,18 +104,6 @@ class Migrator
     ];
 
     /**
-     * PWD reification tables
-     *
-     * @var array
-     */
-    protected $reificationTables = [
-        'documents_names',
-        'documents_collections',
-        'documents_microfilms',
-        'documents_publications',
-    ];
-
-    /**
      * Vocabularies to import
      *
      * @var array
@@ -422,11 +410,41 @@ class Migrator
             }
         }
 
-        // Cache reification data
-        foreach ($this->reificationTables as $table) {
-            foreach ($this->getTable($table) as $row) {
-                $this->reificationData[$table][$row['documentID']][] = $row;
-            }
+        // Cache reification data.
+        foreach ($this->getTable('documents_names') as $row) {
+            $this->reificationData['documents_names'][$row['documentID']][] = [
+                'nameID' => $row['nameID'],
+                'author' => $row['author'],
+                'recipient' => $row['recipient'],
+                'nameLocation' => $row['nameLocation'],
+                'primaryName' => $row['primaryName'],
+                'document_nameNotes' => $row['document_nameNotes'],
+            ];
+        }
+        foreach ($this->getTable('documents_collections') as $row) {
+            $this->reificationData['documents_collections'][$row['documentID']][] = [
+                'collectionID' => $row['collectionID'],
+                'imageID' => $row['imageID'],
+                'imagePageNumber' => $row['imagePageNumber'],
+                'pageCount' => $row['pageCount'],
+                'collectionLocation' => $row['collectionLocation'],
+                'primaryCollection' => $row['primaryCollection'],
+            ];
+        }
+        foreach ($this->getTable('documents_microfilms') as $row) {
+            $this->reificationData['documents_microfilms'][$row['documentID']][] = [
+                'microfilmID' => $row['microfilmID'],
+            ];
+        }
+        foreach ($this->getTable('documents_publications') as $row) {
+            $this->reificationData['documents_publications'][$row['documentID']][] = [
+                'publicationID' => $row['publicationID'],
+                'imageID' => $row['imageID'],
+                'imagePageNumber' => $row['imagePageNumber'],
+                'pageCount' => $row['pageCount'],
+                'publicationLocation' => $row['publicationLocation'],
+                'primaryPublication' => $row['primaryPublication'],
+            ];
         }
     }
 

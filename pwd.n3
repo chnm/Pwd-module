@@ -23,6 +23,10 @@
     rdfs:comment "A secondary recipient of a document."@en ;
     rdfs:subClassOf bibo:recipient .
 
+:repository a rdf:Property ;
+    rdfs:label "repository"@en ;
+    rdfs:comment "The resource was held by this repository."@en .
+
 :collection a rdf:Property ;
     rdfs:label "collection"@en ;
     rdfs:comment "The document was found within this collection."@en .

@@ -651,7 +651,7 @@ class Migrator
             ];
             // PWD collections without a repository: 1, 821. Do not assign excluded repositories.
             if ($row['repositoryID'] && !in_array($row['repositoryID'], $this->excludeRepositories)) {
-                $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'dcterms:publisher', 'resource'];
+                $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'pwd:repository', 'resource'];
             }
             $collections[$row['collectionID']] = $this->addValues($data, $mapping);
         }
@@ -683,7 +683,7 @@ class Migrator
             ];
             // PWD microfilms without a repository: 55-70,72-81,84-92,96-111,116-120,128
             if ($row['repositoryID']) {
-                $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'dcterms:publisher', 'resource'];
+                $mapping[] = [$this->mappings['pwd_repositories'][$row['repositoryID']], 'pwd:repository', 'resource'];
             }
             $microfilms[$row['microfilmID']] = $this->addValues($data, $mapping);
         }

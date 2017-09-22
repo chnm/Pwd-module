@@ -193,6 +193,10 @@ class Migrator
             ['Documents', 'dcterms:title', 'literal'],
             ['War Department documents.', 'dcterms:description', 'literal'],
         ],
+        'images' => [
+            ['Images', 'dcterms:title', 'literal'],
+            ['War Department document images.', 'dcterms:description', 'literal'],
+        ],
     ];
 
     /**
@@ -898,5 +902,33 @@ class Migrator
         $conn = $this->services->get('Omeka\Connection');
         $stmt = $conn->prepare($sql);
         $stmt->execute($insertValues);
+    }
+
+    /**
+     * Migrate PWD images into Omeka.
+     */
+    public function migrateImages()
+    {
+        $images = [];
+        foreach ($this->getTable('images') as $row) {
+            $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['images'],
+                ],
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
+                ],
+            ];
+
+            $mapping = [
+                [$row['imageName'], 'dcterms:title', 'literal'],
+                [$row['imagePageCount'], 'bibo:numPages', 'literal'],
+            ];
+            $images[$row['imageID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('items', $images);
+        $this->mapTable('pwd_images', $response->getContent());
     }
 }

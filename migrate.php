@@ -33,6 +33,8 @@ echo "Migrating names...\n";
 $migrator->migrateNames();
 echo "Migrating documents...\n";
 $migrator->migrateDocuments(1000);
+echo "Migrating images...\n";
+$migrator->migrateImages();
 
 echo "------------------------------\n";
 printf("Execution ended: %s\n", date('c'));

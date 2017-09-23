@@ -922,6 +922,7 @@ class Migrator
 
             $mapping = [
                 [$row['imageName'], 'dcterms:title', 'literal'],
+                [$row['imageDateCreated'], 'dcterms:created', 'literal'],
                 [$row['imagePageCount'], 'bibo:numPages', 'literal'],
             ];
             $images[$row['imageID']] = $this->addValues($data, $mapping);

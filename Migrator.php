@@ -363,7 +363,7 @@ class Migrator
         $conn->exec('DROP TABLE IF EXISTS pwd_document_name');
         $conn->exec('CREATE TABLE pwd_document_name (
             document_id int(11) NOT NULL,
-            name_id int(11) NOT NULL,
+            name_id int(11) DEFAULT NULL,
             is_author tinyint(1) DEFAULT NULL,
             is_recipient tinyint(1) DEFAULT NULL,
             is_primary tinyint(1) DEFAULT NULL,
@@ -428,7 +428,7 @@ class Migrator
             }
         }
 
-        // Cache reification data.
+        // Cache document/name reification data.
         foreach ($this->getTable('documents_names') as $row) {
             $this->reificationData['documents_names'][$row['documentID']][] = [
                 'nameID' => $row['nameID'],
@@ -921,12 +921,12 @@ class Migrator
             }
             foreach ($values as $value) {
                 $insertValues[] = $this->mappings['pwd_documents'][$key];
-                $insertValues[] = $this->mappings['pwd_names'][$value['nameID']];
+                $insertValues[] = $this->mappings['pwd_names'][$value['nameID']] ?? null;
                 $insertValues[] = $value['author'];
                 $insertValues[] = $value['recipient'];
                 $insertValues[] = $value['primaryName'];
-                $insertValues[] = $value['nameLocation'] ?: null;
-                $insertValues[] = $value['document_nameNotes'] ?: null;
+                $insertValues[] = $value['nameLocation'] ? utf8_encode($value['nameLocation']) : null;
+                $insertValues[] = $value['document_nameNotes'] ? utf8_encode($value['document_nameNotes']) : null;
                 $tokenCount++;
             }
         }
@@ -951,11 +951,11 @@ class Migrator
                 foreach ($values as $value) {
                     $insertValues[] = $this->mappings['pwd_documents'][$key];
                     $insertValues[] = $this->mappings["pwd_{$table}s"][$value["{$table}ID"]];
-                    $insertValues[] = $value['imageID'] ? $this->mappings['pwd_images'][$value['imageID']] : null;
+                    $insertValues[] = $this->mappings['pwd_images'][$value['imageID']] ?? null;
                     $insertValues[] = $value['primary' . ucfirst($table)];
                     $insertValues[] = $value['imagePageNumber'];
                     $insertValues[] = $value['pageCount'];
-                    $insertValues[] = $value["{$table}Location"] ?: null;
+                    $insertValues[] = $value["{$table}Location"] ? utf8_encode($value["{$table}Location"]) : null;
                     $tokenCount++;
                 }
             }

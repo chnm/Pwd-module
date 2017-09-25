@@ -32,7 +32,7 @@ $migrator->migratePublications();
 echo "Migrating names...\n";
 $migrator->migrateNames();
 echo "Migrating documents...\n";
-$migrator->migrateDocuments(100);
+$migrator->migrateDocuments(1000);
 echo "Migrating images...\n";
 $migrator->migrateImages();
 echo "Mapping reification data...\n";

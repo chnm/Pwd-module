@@ -7,7 +7,9 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
 
+#
 # Properties
+#
 
 :documentNumber a rdf:Property ;
     rdfs:label "document number"@en ;
@@ -83,7 +85,9 @@
     rdfs:label "notable phrase"@en ;
     rdfs:comment "A notable phrase referenced in a document."@en .
 
+#
 # Classes (document formats)
+#
 
 :Letter a rdfs:Class ;
     rdfs:label "Letter"@en ;

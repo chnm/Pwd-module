@@ -376,7 +376,7 @@ class Migrator
             $conn->exec("DROP TABLE IF EXISTS pwd_document_$table");
             $conn->exec("CREATE TABLE pwd_document_{$table} (
                 document_id int(11) NOT NULL,
-                {$table}_id int(11) NOT NULL,
+                {$table}_id int(11) DEFAULT NULL,
                 image_id int(11) DEFAULT NULL,
                 is_primary tinyint(1) DEFAULT NULL,
                 page_number int(11) DEFAULT NULL,
@@ -614,8 +614,10 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $repositories);
-        $this->mapTable('pwd_repositories', $response->getContent());
+        foreach (array_chunk($repositories, 50, true) as $repositoriesChunk) {
+            $response = $api->batchCreate('items', $repositoriesChunk);
+            $this->mapTable('pwd_repositories', $response->getContent());
+        }
     }
 
     /**
@@ -664,8 +666,10 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $collections);
-        $this->mapTable('pwd_collections', $response->getContent());
+        foreach (array_chunk($collections, 50, true) as $collectionsChunk) {
+            $response = $api->batchCreate('items', $collectionsChunk);
+            $this->mapTable('pwd_collections', $response->getContent());
+        }
     }
 
     /**
@@ -696,8 +700,10 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $microfilms);
-        $this->mapTable('pwd_microfilms', $response->getContent());
+        foreach (array_chunk($microfilms, 50, true) as $microfilmsChunk) {
+            $response = $api->batchCreate('items', $microfilmsChunk);
+            $this->mapTable('pwd_microfilms', $response->getContent());
+        }
     }
 
     /**
@@ -730,8 +736,10 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $publications);
-        $this->mapTable('pwd_publications', $response->getContent());
+        foreach (array_chunk($publications, 50, true) as $publicationsChunk) {
+            $response = $api->batchCreate('items', $publicationsChunk);
+            $this->mapTable('pwd_publications', $response->getContent());
+        }
     }
 
     /**
@@ -771,8 +779,10 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $names);
-        $this->mapTable('pwd_names', $response->getContent());
+        foreach (array_chunk($names, 50, true) as $namesChunk) {
+            $response = $api->batchCreate('items', $namesChunk);
+            $this->mapTable('pwd_names', $response->getContent());
+        }
     }
 
     /**
@@ -882,29 +892,32 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $documents);
-        $this->mapTable('pwd_documents', $response->getContent());
 
-        // Map and save document transcription data.
-        $tokenCount = 0;
-        $insertValues = [];
-        foreach ($response->getContent() as $key => $value) {
-            if (null === $transcriptionData[$key][0] && !$transcriptionData[$key][1]) {
-                // No transcription data to save.
-                continue;
+        foreach (array_chunk($documents, 50, true) as $documentsChunk) {
+            $response = $api->batchCreate('items', $documentsChunk);
+            $this->mapTable('pwd_documents', $response->getContent());
+
+            // Map and save document transcription data.
+            $tokenCount = 0;
+            $insertValues = [];
+            foreach ($response->getContent() as $key => $value) {
+                if (null === $transcriptionData[$key][0] && !$transcriptionData[$key][1]) {
+                    // No transcription data to save.
+                    continue;
+                }
+                $insertValues[] = $value->id();
+                $insertValues[] = $transcriptionData[$key][0];
+                $insertValues[] = utf8_encode($transcriptionData[$key][1]);
+                $tokenCount++;
             }
-            $insertValues[] = $value->id();
-            $insertValues[] = $transcriptionData[$key][0];
-            $insertValues[] = utf8_encode($transcriptionData[$key][1]);
-            $tokenCount++;
+            $sql = sprintf(
+                'INSERT INTO pwd_transcriptions (id_omeka, nominate, transcription) VALUES %s',
+                implode(', ', array_fill(0, $tokenCount, '(?, ?, ?)'))
+            );
+            $conn = $this->services->get('Omeka\Connection');
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($insertValues);
         }
-        $sql = sprintf(
-            'INSERT INTO pwd_transcriptions (id_omeka, nominate, transcription) VALUES %s',
-            implode(', ', array_fill(0, $tokenCount, '(?, ?, ?)'))
-        );
-        $conn = $this->services->get('Omeka\Connection');
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($insertValues);
     }
 
     public function mapReificationData()
@@ -950,7 +963,7 @@ class Migrator
                 }
                 foreach ($values as $value) {
                     $insertValues[] = $this->mappings['pwd_documents'][$key];
-                    $insertValues[] = $this->mappings["pwd_{$table}s"][$value["{$table}ID"]];
+                    $insertValues[] = $this->mappings["pwd_{$table}s"][$value["{$table}ID"]] ?? null;
                     $insertValues[] = $this->mappings['pwd_images'][$value['imageID']] ?? null;
                     $insertValues[] = $value['primary' . ucfirst($table)];
                     $insertValues[] = $value['imagePageNumber'];
@@ -995,7 +1008,9 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('items', $images);
-        $this->mapTable('pwd_images', $response->getContent());
+        foreach (array_chunk($images, 50, true) as $imagesChunk) {
+            $response = $api->batchCreate('items', $imagesChunk);
+            $this->mapTable('pwd_images', $response->getContent());
+        }
     }
 }

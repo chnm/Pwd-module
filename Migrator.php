@@ -370,6 +370,20 @@ class Migrator
             location TEXT COLLATE utf8mb4_unicode_ci,
             notes TEXT COLLATE utf8mb4_unicode_ci
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+
+        // Create document/image reification tables.
+        foreach (['collection', 'microfilm', 'publication'] as $table) {
+            $conn->exec("DROP TABLE IF EXISTS pwd_document_$table");
+            $conn->exec("CREATE TABLE pwd_document_{$table} (
+                document_id int(11) NOT NULL,
+                {$table}_id int(11) NOT NULL,
+                image_id int(11) DEFAULT NULL,
+                is_primary tinyint(1) DEFAULT NULL,
+                page_number int(11) DEFAULT NULL,
+                page_count int(11) DEFAULT NULL,
+                location TEXT COLLATE utf8mb4_unicode_ci
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+        }
     }
 
     /**
@@ -425,30 +439,19 @@ class Migrator
                 'document_nameNotes' => $row['document_nameNotes'],
             ];
         }
-        foreach ($this->getTable('documents_collections') as $row) {
-            $this->reificationData['documents_collections'][$row['documentID']][] = [
-                'collectionID' => $row['collectionID'],
-                'imageID' => $row['imageID'],
-                'imagePageNumber' => $row['imagePageNumber'],
-                'pageCount' => $row['pageCount'],
-                'collectionLocation' => $row['collectionLocation'],
-                'primaryCollection' => $row['primaryCollection'],
-            ];
-        }
-        foreach ($this->getTable('documents_microfilms') as $row) {
-            $this->reificationData['documents_microfilms'][$row['documentID']][] = [
-                'microfilmID' => $row['microfilmID'],
-            ];
-        }
-        foreach ($this->getTable('documents_publications') as $row) {
-            $this->reificationData['documents_publications'][$row['documentID']][] = [
-                'publicationID' => $row['publicationID'],
-                'imageID' => $row['imageID'],
-                'imagePageNumber' => $row['imagePageNumber'],
-                'pageCount' => $row['pageCount'],
-                'publicationLocation' => $row['publicationLocation'],
-                'primaryPublication' => $row['primaryPublication'],
-            ];
+
+        // Cache document/image refication data.
+        foreach (['collection', 'microfilm', 'publication'] as $table) {
+            foreach ($this->getTable("documents_{$table}s") as $row) {
+                $this->reificationData["documents_{$table}s"][$row['documentID']][] = [
+                    "{$table}ID" => $row["{$table}ID"],
+                    'imageID' => $row['imageID'],
+                    'imagePageNumber' => $row['imagePageNumber'],
+                    'pageCount' => $row['pageCount'],
+                    "{$table}Location" => $row["{$table}Location"],
+                    'primary' . ucfirst($table) => $row['primary' . ucfirst($table)],
+                ];
+            }
         }
     }
 
@@ -902,6 +905,69 @@ class Migrator
         $conn = $this->services->get('Omeka\Connection');
         $stmt = $conn->prepare($sql);
         $stmt->execute($insertValues);
+    }
+
+    public function mapReificationData()
+    {
+        $conn = $this->services->get('Omeka\Connection');
+
+        // Map documents/names reification table.
+        $tokenCount = 0;
+        $insertValues = [];
+        foreach ($this->reificationData['documents_names'] as $key => $values) {
+            if (!isset($this->mappings['pwd_documents'][$key])) {
+                // Avoid error if a document limit was set.
+                continue;
+            }
+            foreach ($values as $value) {
+                $insertValues[] = $this->mappings['pwd_documents'][$key];
+                $insertValues[] = $this->mappings['pwd_names'][$value['nameID']];
+                $insertValues[] = $value['author'];
+                $insertValues[] = $value['recipient'];
+                $insertValues[] = $value['primaryName'];
+                $insertValues[] = $value['nameLocation'] ?: null;
+                $insertValues[] = $value['document_nameNotes'] ?: null;
+                $tokenCount++;
+            }
+        }
+        $sql = sprintf(
+            'INSERT INTO pwd_document_name (
+                document_id, name_id, is_author, is_recipient, is_primary, location, notes
+            ) VALUES %s',
+            implode(', ', array_fill(0, $tokenCount, '(?, ?, ?, ?, ?, ?, ?)'))
+        );
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($insertValues);
+
+        // Map document/image reification tables.
+        foreach (['collection', 'microfilm', 'publication'] as $table) {
+            $tokenCount = 0;
+            $insertValues = [];
+            foreach ($this->reificationData["documents_{$table}s"] as $key => $values) {
+                if (!isset($this->mappings['pwd_documents'][$key])) {
+                    // Avoid error if a document limit was set.
+                    continue;
+                }
+                foreach ($values as $value) {
+                    $insertValues[] = $this->mappings['pwd_documents'][$key];
+                    $insertValues[] = $this->mappings["pwd_{$table}s"][$value["{$table}ID"]];
+                    $insertValues[] = $value['imageID'] ? $this->mappings['pwd_images'][$value['imageID']] : null;
+                    $insertValues[] = $value['primary' . ucfirst($table)];
+                    $insertValues[] = $value['imagePageNumber'];
+                    $insertValues[] = $value['pageCount'];
+                    $insertValues[] = $value["{$table}Location"] ?: null;
+                    $tokenCount++;
+                }
+            }
+            $sql = sprintf(
+                "INSERT INTO pwd_document_{$table} (
+                    document_id, {$table}_id, image_id, is_primary, page_number, page_count, location
+                ) VALUES %s",
+                implode(', ', array_fill(0, $tokenCount, '(?, ?, ?, ?, ?, ?, ?)'))
+            );
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($insertValues);
+        }
     }
 
     /**

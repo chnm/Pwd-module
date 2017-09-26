@@ -571,7 +571,7 @@ class Migrator
                     'o:id' => $this->itemSets['repositories'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['foaf:Organization'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Repository'],
                 ],
             ];
 
@@ -632,7 +632,7 @@ class Migrator
                     'o:id' => $this->itemSets['collections'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
                 ],
             ];
 
@@ -684,7 +684,7 @@ class Migrator
                     'o:id' => $this->itemSets['microfilms'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:CollectedDocument'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Microfilm'],
                 ],
             ];
 
@@ -718,7 +718,7 @@ class Migrator
                     'o:id' => $this->itemSets['publications'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
                 ],
             ];
 
@@ -754,7 +754,7 @@ class Migrator
                     'o:id' => $this->itemSets['names'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['foaf:Agent'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Agent'],
                 ],
             ];
 

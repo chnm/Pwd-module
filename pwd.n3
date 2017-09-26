@@ -11,6 +11,26 @@
 # Properties
 #
 
+:repository a rdf:Property ;
+    rdfs:label "in repository"@en ;
+    rdfs:comment "The resource was in this repository."@en ;
+    rdfs:range :Repository .
+
+:collection a rdf:Property ;
+    rdfs:label "in collection"@en ;
+    rdfs:comment "The document was in this collection."@en ;
+    rdfs:range :Collection .
+
+:microfilm a rdf:Property ;
+    rdfs:label "in microfilm"@en ;
+    rdfs:comment "The document was in this microfilm."@en ;
+    rdfs:range :Microfilm .
+
+:publication a rdf:Property ;
+    rdfs:label "in publication"@en ;
+    rdfs:comment "The document was in this publication."@en ;
+    rdfs:range :Publication .
+
 :documentNumber a rdf:Property ;
     rdfs:label "document number"@en ;
     rdfs:comment "A legacy document identifier."@en .
@@ -18,28 +38,12 @@
 :secondaryAuthor a rdf:Property ;
     rdfs:label "secondary author"@en ;
     rdfs:comment "A secondary author of a document."@en ;
-    rdfs:subClassOf dcterms:creator .
+    rdfs:subPropertyOf dcterms:creator .
 
 :secondaryRecipient a rdf:Property ;
     rdfs:label "secondary recipient"@en ;
     rdfs:comment "A secondary recipient of a document."@en ;
-    rdfs:subClassOf bibo:recipient .
-
-:repository a rdf:Property ;
-    rdfs:label "repository"@en ;
-    rdfs:comment "The resource was held by this repository."@en .
-
-:collection a rdf:Property ;
-    rdfs:label "collection"@en ;
-    rdfs:comment "The document was found within this collection."@en .
-
-:microfilm a rdf:Property ;
-    rdfs:label "microfilm"@en ;
-    rdfs:comment "The document was found within this microfilm."@en .
-
-:publication a rdf:Property ;
-    rdfs:label "publication"@en ;
-    rdfs:comment "The document was found within this publication."@en .
+    rdfs:subPropertyOf bibo:recipient .
 
 :note a rdf:Property ;
     rdfs:label "note"@en ;
@@ -86,269 +90,360 @@
     rdfs:comment "A notable phrase referenced in a document."@en .
 
 #
-# Classes (document formats)
+# Classes
 #
 
-:Letter a rdfs:Class ;
-    rdfs:label "Letter"@en ;
-    rdfs:comment "Letter"@en .
+:Repository a rdfs:Class ;
+    rdfs:label "Repository"@en ;
+    rdfs:comment "Repository"@en ;
+    rdfs:subClassOf foaf:Organization .
 
-:LetterAutograph a rdfs:Class ;
-    rdfs:label "Letter Autograph"@en ;
-    rdfs:comment "Autograph Letter"@en .
+:Collection a rdfs:Class ;
+    rdfs:label "Collection"@en ;
+    rdfs:comment "Collection"@en ;
+    rdfs:subClassOf bibo:Collection .
 
-:LetterAutographDraft a rdfs:Class ;
-    rdfs:label "Letter Autograph Draft"@en ;
-    rdfs:comment "Autograph Draft Letter"@en .
+:Microfilm a rdfs:Class ;
+    rdfs:label "Microfilm"@en ;
+    rdfs:comment "Microfilm"@en ;
+    rdfs:subClassOf bibo:CollectedDocument .
 
-:LetterAutographDraftSigned a rdfs:Class ;
-    rdfs:label "Letter Autograph Draft Signed"@en ;
-    rdfs:comment "Autograph Draft Letter Signed"@en .
+:Publication a rdfs:Class ;
+    rdfs:label "Publication"@en ;
+    rdfs:comment "Publication"@en ;
+    rdfs:subClassOf dcterms:BibliographicResource .
 
-:LetterAutographFragment a rdfs:Class ;
-    rdfs:label "Letter Autograph Fragment"@en ;
-    rdfs:comment "Autograph Letter fragment"@en .
-
-:LetterAutographFragmentSigned a rdfs:Class ;
-    rdfs:label "Letter Autograph Fragment Signed"@en ;
-    rdfs:comment "Autograph Letter fragment signed"@en .
-
-:LetterAutographSigned a rdfs:Class ;
-    rdfs:label "Letter Autograph Signed"@en ;
-    rdfs:comment "Autograph Letter Signed"@en .
-
-:LetterAutographUndeterminedType a rdfs:Class ;
-    rdfs:label "Letter Autograph Undetermined Type"@en ;
-    rdfs:comment "Autograph Letter of Undetermined Type"@en .
-
-:LetterContemporaryCopy a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy"@en ;
-    rdfs:comment "Contemporary Copy of Letter"@en .
-
-:LetterContemporaryCopyAuthorFiles a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy Author Files"@en ;
-    rdfs:comment "Contemporary Copy of Letter made from Author's Files"@en .
-
-:LetterContemporaryCopyRecipientFiles a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy Recipient Files"@en ;
-    rdfs:comment "Contemporary Copy of Letter made from Recipient's Files"@en .
-
-:LetterContemporaryCopySigned a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy Signed"@en ;
-    rdfs:comment "Contemporary Copy of Letter Signed"@en .
-
-:LetterDraft a rdfs:Class ;
-    rdfs:label "Letter Draft"@en ;
-    rdfs:comment "Draft Letter"@en .
-
-:LetterDraftSigned a rdfs:Class ;
-    rdfs:label "Letter Draft Signed"@en ;
-    rdfs:comment "Draft Letter Signed"@en .
-
-:LetterExtract a rdfs:Class ;
-    rdfs:label "Letter Extract"@en ;
-    rdfs:comment "Extract of Letter"@en .
-
-:LetterFragment a rdfs:Class ;
-    rdfs:label "Letter Fragment"@en ;
-    rdfs:comment "Letter fragment"@en .
-
-:LetterManuscriptTranslated a rdfs:Class ;
-    rdfs:label "Letter Manuscript Translated"@en ;
-    rdfs:comment "Manuscript Translation of Letter"@en .
-
-:LetterModernCopyTranscribed a rdfs:Class ;
-    rdfs:label "Letter Modern Copy Transcribed"@en ;
-    rdfs:comment "Printed transcription/modern copy of letter"@en .
-
-:LetterPrintedPublished a rdfs:Class ;
-    rdfs:label "Letter Printed Published"@en ;
-    rdfs:comment "Printed or published letter"@en .
-
-:LetterSigned a rdfs:Class ;
-    rdfs:label "Letter Signed"@en ;
-    rdfs:comment "Letter Signed"@en .
-
-:LetterTranslated a rdfs:Class ;
-    rdfs:label "Letter Translated"@en ;
-    rdfs:comment "Translation (Contemporary or Modern) of Letter"@en .
-
-:LetterTranslated2 a rdfs:Class ;
-    rdfs:label "Letter Translated2"@en ;
-    rdfs:comment "Translated letter (implies transcription)"@en .
-
-:LetterTyped a rdfs:Class ;
-    rdfs:label "Letter Typed"@en ;
-    rdfs:comment "Typed letter"@en .
-
-:LetterUndeterminedType a rdfs:Class ;
-    rdfs:label "Letter Undetermined Type"@en ;
-    rdfs:comment "Letter, Type Undetermined"@en .
+:Agent a rdfs:Class ;
+    rdfs:label "Agent"@en ;
+    rdfs:comment "Agent"@en ;
+    rdfs:subClassOf foaf:Agent .
 
 :Document a rdfs:Class ;
     rdfs:label "Document"@en ;
-    rdfs:comment "Document"@en .
+    rdfs:comment "Document"@en ;
+    rdfs:subClassOf dcterms:BibliographicResource .
+
+:Letter a rdfs:Class ;
+    rdfs:label "Letter"@en ;
+    rdfs:comment "Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutograph a rdfs:Class ;
+    rdfs:label "Letter Autograph"@en ;
+    rdfs:comment "Autograph Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutographDraft a rdfs:Class ;
+    rdfs:label "Letter Autograph Draft"@en ;
+    rdfs:comment "Autograph Draft Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutographDraftSigned a rdfs:Class ;
+    rdfs:label "Letter Autograph Draft Signed"@en ;
+    rdfs:comment "Autograph Draft Letter Signed"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutographFragment a rdfs:Class ;
+    rdfs:label "Letter Autograph Fragment"@en ;
+    rdfs:comment "Autograph Letter fragment"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutographFragmentSigned a rdfs:Class ;
+    rdfs:label "Letter Autograph Fragment Signed"@en ;
+    rdfs:comment "Autograph Letter fragment signed"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutographSigned a rdfs:Class ;
+    rdfs:label "Letter Autograph Signed"@en ;
+    rdfs:comment "Autograph Letter Signed"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterAutographUndeterminedType a rdfs:Class ;
+    rdfs:label "Letter Autograph Undetermined Type"@en ;
+    rdfs:comment "Autograph Letter of Undetermined Type"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterContemporaryCopy a rdfs:Class ;
+    rdfs:label "Letter Contemporary Copy"@en ;
+    rdfs:comment "Contemporary Copy of Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterContemporaryCopyAuthorFiles a rdfs:Class ;
+    rdfs:label "Letter Contemporary Copy Author Files"@en ;
+    rdfs:comment "Contemporary Copy of Letter made from Author's Files"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterContemporaryCopyRecipientFiles a rdfs:Class ;
+    rdfs:label "Letter Contemporary Copy Recipient Files"@en ;
+    rdfs:comment "Contemporary Copy of Letter made from Recipient's Files"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterContemporaryCopySigned a rdfs:Class ;
+    rdfs:label "Letter Contemporary Copy Signed"@en ;
+    rdfs:comment "Contemporary Copy of Letter Signed"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterDraft a rdfs:Class ;
+    rdfs:label "Letter Draft"@en ;
+    rdfs:comment "Draft Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterDraftSigned a rdfs:Class ;
+    rdfs:label "Letter Draft Signed"@en ;
+    rdfs:comment "Draft Letter Signed"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterExtract a rdfs:Class ;
+    rdfs:label "Letter Extract"@en ;
+    rdfs:comment "Extract of Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterFragment a rdfs:Class ;
+    rdfs:label "Letter Fragment"@en ;
+    rdfs:comment "Letter fragment"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterManuscriptTranslated a rdfs:Class ;
+    rdfs:label "Letter Manuscript Translated"@en ;
+    rdfs:comment "Manuscript Translation of Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterModernCopyTranscribed a rdfs:Class ;
+    rdfs:label "Letter Modern Copy Transcribed"@en ;
+    rdfs:comment "Printed transcription/modern copy of letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterPrintedPublished a rdfs:Class ;
+    rdfs:label "Letter Printed Published"@en ;
+    rdfs:comment "Printed or published letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterSigned a rdfs:Class ;
+    rdfs:label "Letter Signed"@en ;
+    rdfs:comment "Letter Signed"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterTranslated a rdfs:Class ;
+    rdfs:label "Letter Translated"@en ;
+    rdfs:comment "Translation (Contemporary or Modern) of Letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterTranslated2 a rdfs:Class ;
+    rdfs:label "Letter Translated2"@en ;
+    rdfs:comment "Translated letter (implies transcription)"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterTyped a rdfs:Class ;
+    rdfs:label "Letter Typed"@en ;
+    rdfs:comment "Typed letter"@en ;
+    rdfs:subClassOf :Document .
+
+:LetterUndeterminedType a rdfs:Class ;
+    rdfs:label "Letter Undetermined Type"@en ;
+    rdfs:comment "Letter, Type Undetermined"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentAutograph a rdfs:Class ;
     rdfs:label "Document Autograph"@en ;
-    rdfs:comment "Autograph Document"@en .
+    rdfs:comment "Autograph Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentAutographDraft a rdfs:Class ;
     rdfs:label "Document Autograph Draft"@en ;
-    rdfs:comment "Autograph Draft Document"@en .
+    rdfs:comment "Autograph Draft Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentAutographSigned a rdfs:Class ;
     rdfs:label "Document Autograph Signed"@en ;
-    rdfs:comment "Autograph Document Signed"@en .
+    rdfs:comment "Autograph Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentAutographDraftSigned a rdfs:Class ;
     rdfs:label "Document Autograph Draft Signed"@en ;
-    rdfs:comment "Autograph Draft Document Signed"@en .
+    rdfs:comment "Autograph Draft Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentCopy a rdfs:Class ;
     rdfs:label "Document Copy"@en ;
-    rdfs:comment "Copy of document"@en .
+    rdfs:comment "Copy of document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentCopySigned a rdfs:Class ;
     rdfs:label "Document Copy Signed"@en ;
-    rdfs:comment "Copy of Signed Document"@en .
+    rdfs:comment "Copy of Signed Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentDraft a rdfs:Class ;
     rdfs:label "Document Draft"@en ;
-    rdfs:comment "Draft Document"@en .
+    rdfs:comment "Draft Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentDraftSigned a rdfs:Class ;
     rdfs:label "Document Draft Signed"@en ;
-    rdfs:comment "Draft Document Signed"@en .
+    rdfs:comment "Draft Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentDraftModernCopyHandTranscribed a rdfs:Class ;
     rdfs:label "Document Draft Modern Copy Hand Transcribed"@en ;
-    rdfs:comment "Draft document, hand-written transcription/modern copy"@en .
+    rdfs:comment "Draft document, hand-written transcription/modern copy"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentManuscriptTranslated a rdfs:Class ;
     rdfs:label "Document Manuscript Translated"@en ;
-    rdfs:comment "Manuscript Translation of Document"@en .
+    rdfs:comment "Manuscript Translation of Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentModernCopyPrintTranscribed a rdfs:Class ;
     rdfs:label "Document Modern Copy Print Transcribed"@en ;
-    rdfs:comment "Printed transcription/modern copy of Document"@en .
+    rdfs:comment "Printed transcription/modern copy of Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentPrinted a rdfs:Class ;
     rdfs:label "Document Printed"@en ;
-    rdfs:comment "Printed Document"@en .
+    rdfs:comment "Printed Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentPrintedSigned a rdfs:Class ;
     rdfs:label "Document Printed Signed"@en ;
-    rdfs:comment "Printed Document Signed"@en .
+    rdfs:comment "Printed Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentPrintedPublished a rdfs:Class ;
     rdfs:label "Document Printed Published"@en ;
-    rdfs:comment "Printed or published document"@en .
+    rdfs:comment "Printed or published document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentSigned a rdfs:Class ;
     rdfs:label "Document Signed"@en ;
-    rdfs:comment "Document Signed"@en .
+    rdfs:comment "Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentTranslated a rdfs:Class ;
     rdfs:label "Document Translated"@en ;
-    rdfs:comment "Translation (Contemporary or Modern) of Document"@en .
+    rdfs:comment "Translation (Contemporary or Modern) of Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentTyped a rdfs:Class ;
     rdfs:label "Document Typed"@en ;
-    rdfs:comment "Typed Document"@en .
+    rdfs:comment "Typed Document"@en ;
+    rdfs:subClassOf :Document .
 
 :DocumentUndeterminedType a rdfs:Class ;
     rdfs:label "Document Undetermined Type"@en ;
-    rdfs:comment "Document, type undetermined"@en .
+    rdfs:comment "Document, type undetermined"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentAutograph a rdfs:Class ;
     rdfs:label "Letter Document Autograph"@en ;
-    rdfs:comment "Autograph Letter / Autograph Document"@en .
+    rdfs:comment "Autograph Letter / Autograph Document"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentAutographSigned a rdfs:Class ;
     rdfs:label "Letter Document Autograph Signed"@en ;
-    rdfs:comment "Autograph Letter / Autograph Document Signed"@en .
+    rdfs:comment "Autograph Letter / Autograph Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentAutographSigned2 a rdfs:Class ;
     rdfs:label "Letter Document Autograph Signed2"@en ;
-    rdfs:comment "Autograph Letter/Document Signed"@en .
+    rdfs:comment "Autograph Letter/Document Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentCited a rdfs:Class ;
     rdfs:label "Letter Document Cited"@en ;
-    rdfs:comment "Cited letter or document"@en .
+    rdfs:comment "Cited letter or document"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentContemporaryCopy a rdfs:Class ;
     rdfs:label "Letter Document Contemporary Copy"@en ;
-    rdfs:comment "Contemporary Printed Copy of Letter/Document (other than PL/PD)"@en .
+    rdfs:comment "Contemporary Printed Copy of Letter/Document (other than PL/PD)"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentContemporaryCopyUnsigned a rdfs:Class ;
     rdfs:label "Letter Document Contemporary Copy Unsigned"@en ;
-    rdfs:comment "Letter/Document (contemporary copy, in third hand, unsigned)"@en .
+    rdfs:comment "Letter/Document (contemporary copy, in third hand, unsigned)"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentDraft a rdfs:Class ;
     rdfs:label "Letter Document Draft"@en ;
-    rdfs:comment "Draft Letter / Draft Document"@en .
+    rdfs:comment "Draft Letter / Draft Document"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentModernCopyPrintTranscribed a rdfs:Class ;
     rdfs:label "Letter Document Modern Copy Print Transcribed"@en ;
-    rdfs:comment "Modern Printed Transcription of Letter/Document"@en .
+    rdfs:comment "Modern Printed Transcription of Letter/Document"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterDocumentUndeterminedType a rdfs:Class ;
     rdfs:label "Letter Document Undetermined Type"@en ;
-    rdfs:comment "Letter/Document Type undetermined"@en .
+    rdfs:comment "Letter/Document Type undetermined"@en ;
+    rdfs:subClassOf :Document .
 
 :AutographDraft a rdfs:Class ;
     rdfs:label "Autograph Draft"@en ;
-    rdfs:comment "Autograph Draft"@en .
+    rdfs:comment "Autograph Draft"@en ;
+    rdfs:subClassOf :Document .
 
 :AutographDraftSigned a rdfs:Class ;
     rdfs:label "Autograph Draft Signed"@en ;
-    rdfs:comment "Autograph Signed Draft"@en .
+    rdfs:comment "Autograph Signed Draft"@en ;
+    rdfs:subClassOf :Document .
 
 :DraftFragment a rdfs:Class ;
     rdfs:label "Draft Fragment"@en ;
-    rdfs:comment "Draft Fragment"@en .
+    rdfs:comment "Draft Fragment"@en ;
+    rdfs:subClassOf :Document .
 
 :ContemporaryCertifiedCopyAutographSigned a rdfs:Class ;
     rdfs:label "Contemporary Certified Copy Autograph Signed"@en ;
-    rdfs:comment "Autograph, Contemporaneous or Certified Copy, Signed"@en .
+    rdfs:comment "Autograph, Contemporaneous or Certified Copy, Signed"@en ;
+    rdfs:subClassOf :Document .
 
 :ContemporaryCertifiedCopy a rdfs:Class ;
     rdfs:label "Contemporary Certified Copy"@en ;
-    rdfs:comment "Contemporaneous or Certified Copy (made for information of action)"@en .
+    rdfs:comment "Contemporaneous or Certified Copy (made for information of action)"@en ;
+    rdfs:subClassOf :Document .
 
 :ModernCopyPrintTranscribed a rdfs:Class ;
     rdfs:label "Modern Copy Print Transcribed"@en ;
-    rdfs:comment "Printed or published transcription/modern copy"@en .
+    rdfs:comment "Printed or published transcription/modern copy"@en ;
+    rdfs:subClassOf :Document .
 
 :ModernCopyHandTranscribed a rdfs:Class ;
     rdfs:label "Modern Copy Hand Transcribed"@en ;
-    rdfs:comment "Transcription/modern copy (hand written)"@en .
+    rdfs:comment "Transcription/modern copy (hand written)"@en ;
+    rdfs:subClassOf :Document .
 
 :Extract a rdfs:Class ;
     rdfs:label "Extract"@en ;
-    rdfs:comment "Extract"@en .
+    rdfs:comment "Extract"@en ;
+    rdfs:subClassOf :Document .
 
 :Letterbook a rdfs:Class ;
     rdfs:label "Letterbook"@en ;
-    rdfs:comment "Letterbook"@en .
+    rdfs:comment "Letterbook"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterbookCopy a rdfs:Class ;
     rdfs:label "Letterbook Copy"@en ;
-    rdfs:comment "Letterbook Copy"@en .
+    rdfs:comment "Letterbook Copy"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterbookAuthorCopy a rdfs:Class ;
     rdfs:label "Letterbook Author Copy"@en ;
-    rdfs:comment "Author's Letterbook Copy"@en .
+    rdfs:comment "Author's Letterbook Copy"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterbookAuthorCopyAuthor a rdfs:Class ;
     rdfs:label "Letterbook Author Copy Author"@en ;
-    rdfs:comment "Author's Letterbook Copy, in hand of author"@en .
+    rdfs:comment "Author's Letterbook Copy, in hand of author"@en ;
+    rdfs:subClassOf :Document .
 
 :LetterbookRecipientCopy a rdfs:Class ;
     rdfs:label "Letterbook Recipient Copy"@en ;
-    rdfs:comment "Recipient's Letterbook Copy"@en .
+    rdfs:comment "Recipient's Letterbook Copy"@en ;
+    rdfs:subClassOf :Document .
 
 :UndeterminedType a rdfs:Class ;
     rdfs:label "Undetermined Type"@en ;
-    rdfs:comment "Type Undetermined"@en .
+    rdfs:comment "Type Undetermined"@en ;
+    rdfs:subClassOf :Document .

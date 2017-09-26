@@ -19,6 +19,7 @@ echo "Creating tables..."; $migrator->createTables(); done();
 echo "Importing vocabularies..."; $migrator->importVocabs(); done();
 echo "Caching data..."; $migrator->cacheData(); done();
 echo "Creating item sets..."; $migrator->createItemSets(); done();
+echo "Creating resource templates..."; $migrator->createResourceTemplates(); done();
 
 // Migrate
 echo "Migrating repositories..."; $migrator->migrateRepositories(); done();

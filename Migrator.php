@@ -47,6 +47,13 @@ class Migrator
     protected $itemSets = [];
 
     /**
+     * Cache of Omeka resource templates
+     *
+     * @var array
+     */
+    protected $resourceTemplates = [];
+
+    /**
      * Do not migrate these special PWD repositories (no data to save).
      *
      * Each have corresponding PWD collections:
@@ -77,6 +84,8 @@ class Migrator
         'module',
         'password_creation',
         'resource',
+        'resource_template',
+        'resource_template_property',
         'site',
         'site_block_attachment',
         'site_item_set',
@@ -196,6 +205,30 @@ class Migrator
         'images' => [
             ['Images', 'dcterms:title', 'literal'],
             ['War Department document images.', 'dcterms:description', 'literal'],
+        ],
+    ];
+
+    /**
+     * Resource templates to create
+     *
+     * @var array
+     */
+    protected $resourceTemplateMappings = [
+        'repositories' => [
+            'label' => 'Repository',
+            'resource_class' => 'foaf:Organization',
+            'resource_template_property' => [
+                'dcterms:title' => [null, null, 'literal', false],
+                'dcterms:identifier' => ['MARC organization code', null, 'literal', false],
+                'vcard:organization-name' => [null, null, 'literal', false],
+                'vcard:organization-unit' => [null, null, 'literal', false],
+                'vcard:street-address' => [null, null, 'literal', false],
+                'vcard:locality' => [null, null, 'literal', false],
+                'vcard:region' => [null, null, 'literal', false],
+                'vcard:postal-code' => [null, null, 'literal', false],
+                'foaf:phone' => [null, null, 'literal', false],
+                'vcard:note' => [null, null, 'literal', false],
+            ],
         ],
     ];
 
@@ -472,6 +505,36 @@ class Migrator
     }
 
     /**
+     * Create resource templates needed for PWD migration.
+     */
+    public function createResourceTemplates()
+    {
+        $resTemps = [];
+        foreach ($this->resourceTemplateMappings as $key => $mapping) {
+            $resTemp = [
+                'o:label' => $mapping['label'],
+                'o:resource_class' => ['o:id' => $this->vocabMembers['resource_class'][$mapping['resource_class']]],
+                'o:resource_template_property' => [],
+            ];
+            foreach ($mapping['resource_template_property'] as $term => $prop) {
+                $resTemp['o:resource_template_property'][] = [
+                    'o:property' => ['o:id' => $this->vocabMembers['property'][$term]],
+                    'o:alternate_label' => $prop[0],
+                    'o:alternate_comment' => $prop[1],
+                    'o:data_type' => $prop[2],
+                    'o:is_required' => $prop[3],
+                ];
+            }
+            $resTemps[$key] = $resTemp;
+        }
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('resource_templates', $resTemps);
+        foreach ($response->getContent() as $key => $resTemp) {
+            $this->resourceTemplates[$key] = $resTemp->id();
+        }
+    }
+
+    /**
      * Get the PDO statement for iterating all rows of a PWD table.
      *
      * @param string $table The PWD table name
@@ -570,6 +633,9 @@ class Migrator
                 'o:item_set' => [
                     'o:id' => $this->itemSets['repositories'],
                 ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['repositories'],
+                ],
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['foaf:Organization'],
                 ],
@@ -578,14 +644,6 @@ class Migrator
             // dcterms:title
             $title = [$row['repositoryName1'], $row['repositoryName2']];
             $title = implode(': ', array_filter(array_map('trim', $title)));
-
-            // dcterms:identifier
-            // The provided codes don't always match up with the corresponding
-            // organization. Even so, corrections can be made post-migration.
-            $identifier = sprintf(
-                'http://id.loc.gov/vocabulary/organizations/%s',
-                strtolower($row['repositoryMARCOrganizationCode']) // normalized
-            );
 
             // vcard:street-address
             $address = [];
@@ -599,8 +657,7 @@ class Migrator
 
             $mapping = [
                 [$title, 'dcterms:title', 'literal'],
-                [$title, 'foaf:name', 'literal'],
-                [$identifier, 'dcterms:identifier', 'uri'],
+                [$row['repositoryMARCOrganizationCode'], 'dcterms:identifier', 'literal'],
                 [$row['repositoryName1'], 'vcard:organization-name', 'literal'],
                 [$row['repositoryName2'], 'vcard:organization-unit', 'literal'],
                 [$address, 'vcard:street-address', 'literal'],

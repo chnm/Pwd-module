@@ -2,6 +2,11 @@
 require 'config.php';
 require 'Migrator.php';
 
+function done()
+{
+    printf(" done (%s MB)\n", round(memory_get_usage() / 1048576));
+}
+
 $migrator = new Migrator(PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_OMEKA_PATH);
 
 $timeStart = microtime(true);
@@ -9,34 +14,21 @@ printf("Execution started: %s\n", date('c'));
 echo "------------------------------\n";
 
 // Prepare migration
-echo "Reverting Omeka...\n";
-$migrator->revertOmeka();
-echo "Creating tables...\n";
-$migrator->createTables();
-echo "Importing vocabularies...\n";
-$migrator->importVocabs();
-echo "Caching data...\n";
-$migrator->cacheData();
-echo "Creating item sets...\n";
-$migrator->createItemSets();
+echo "Reverting Omeka..."; $migrator->revertOmeka(); done();
+echo "Creating tables..."; $migrator->createTables(); done();
+echo "Importing vocabularies..."; $migrator->importVocabs(); done();
+echo "Caching data..."; $migrator->cacheData(); done();
+echo "Creating item sets..."; $migrator->createItemSets(); done();
 
 // Migrate
-echo "Migrating repositories...\n";
-$migrator->migrateRepositories();
-echo "Migrating collections...\n";
-$migrator->migrateCollections();
-echo "Migrating microfilms...\n";
-$migrator->migrateMicrofilms();
-echo "Migrating publications...\n";
-$migrator->migratePublications();
-echo "Migrating names...\n";
-$migrator->migrateNames();
-echo "Migrating documents...\n";
-$migrator->migrateDocuments();
-echo "Migrating images...\n";
-$migrator->migrateImages();
-echo "Mapping reification data...\n";
-$migrator->mapReificationData();
+echo "Migrating repositories..."; $migrator->migrateRepositories(); done();
+echo "Migrating collections..."; $migrator->migrateCollections(); done();
+echo "Migrating microfilms..."; $migrator->migrateMicrofilms(); done();
+echo "Migrating publications..."; $migrator->migratePublications(); done();
+echo "Migrating names..."; $migrator->migrateNames(); done();
+echo "Migrating documents..."; $migrator->migrateDocuments(); done();
+echo "Migrating images..."; $migrator->migrateImages(); done();
+echo "Mapping reification data..."; $migrator->mapReificationData(); done();
 
 echo "------------------------------\n";
 printf("Execution ended: %s\n", date('c'));

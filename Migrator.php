@@ -571,7 +571,7 @@ class Migrator
                     'o:id' => $this->itemSets['repositories'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Repository'],
+                    'o:id' => $this->vocabMembers['resource_class']['foaf:Organization'],
                 ],
             ];
 
@@ -632,7 +632,7 @@ class Migrator
                     'o:id' => $this->itemSets['collections'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
                 ],
             ];
 
@@ -718,7 +718,7 @@ class Migrator
                     'o:id' => $this->itemSets['publications'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
+                    'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
                 ],
             ];
 
@@ -754,7 +754,7 @@ class Migrator
                     'o:id' => $this->itemSets['names'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['pwd:Agent'],
+                    'o:id' => $this->vocabMembers['resource_class']['foaf:Agent'],
                 ],
             ];
 
@@ -808,9 +808,10 @@ class Migrator
                 ],
             ];
             if ($row['documentFormatID']) {
-                $documentFormat = sprintf('pwd:%s', $this->documentFormats[$row['documentFormatID']][0]);
+                $localName = $this->documentFormats[$row['documentFormatID']][0];
+                $prefix = in_array($localName, ['Document', 'Letter']) ? 'bibo' : 'pwd';
                 $data['o:resource_class'] = [
-                    'o:id' => $this->vocabMembers['resource_class'][$documentFormat],
+                    'o:id' => $this->vocabMembers['resource_class']["$prefix:$localName"],
                 ];
             }
 

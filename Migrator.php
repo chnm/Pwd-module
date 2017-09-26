@@ -614,7 +614,7 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($repositories, 50, true) as $repositoriesChunk) {
+        foreach (array_chunk($repositories, 100, true) as $repositoriesChunk) {
             $response = $api->batchCreate('items', $repositoriesChunk);
             $this->mapTable('pwd_repositories', $response->getContent());
         }
@@ -666,7 +666,7 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($collections, 50, true) as $collectionsChunk) {
+        foreach (array_chunk($collections, 100, true) as $collectionsChunk) {
             $response = $api->batchCreate('items', $collectionsChunk);
             $this->mapTable('pwd_collections', $response->getContent());
         }
@@ -700,7 +700,7 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($microfilms, 50, true) as $microfilmsChunk) {
+        foreach (array_chunk($microfilms, 100, true) as $microfilmsChunk) {
             $response = $api->batchCreate('items', $microfilmsChunk);
             $this->mapTable('pwd_microfilms', $response->getContent());
         }
@@ -736,7 +736,7 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($publications, 50, true) as $publicationsChunk) {
+        foreach (array_chunk($publications, 100, true) as $publicationsChunk) {
             $response = $api->batchCreate('items', $publicationsChunk);
             $this->mapTable('pwd_publications', $response->getContent());
         }
@@ -779,7 +779,7 @@ class Migrator
         }
 
         $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($names, 50, true) as $namesChunk) {
+        foreach (array_chunk($names, 100, true) as $namesChunk) {
             $response = $api->batchCreate('items', $namesChunk);
             $this->mapTable('pwd_names', $response->getContent());
         }
@@ -893,7 +893,7 @@ class Migrator
 
         $api = $this->services->get('Omeka\ApiManager');
 
-        foreach (array_chunk($documents, 50, true) as $documentsChunk) {
+        foreach (array_chunk($documents, 100, true) as $documentsChunk) {
             $response = $api->batchCreate('items', $documentsChunk);
             $this->mapTable('pwd_documents', $response->getContent());
 
@@ -920,6 +920,40 @@ class Migrator
         }
     }
 
+    /**
+     * Migrate PWD images into Omeka.
+     */
+    public function migrateImages()
+    {
+        $images = [];
+        foreach ($this->getTable('images') as $row) {
+            $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['images'],
+                ],
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
+                ],
+            ];
+
+            $mapping = [
+                [$row['imageName'], 'dcterms:title', 'literal'],
+                [$row['imageDateCreated'], 'dcterms:created', 'literal'],
+                [$row['imagePageCount'], 'bibo:numPages', 'literal'],
+            ];
+            $images[$row['imageID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        foreach (array_chunk($images, 100, true) as $imagesChunk) {
+            $response = $api->batchCreate('items', $imagesChunk);
+            $this->mapTable('pwd_images', $response->getContent());
+        }
+    }
+
+    /**
+     * Map document/name and document/image reification data.
+     */
     public function mapReificationData()
     {
         $conn = $this->services->get('Omeka\Connection');
@@ -980,37 +1014,6 @@ class Migrator
             );
             $stmt = $conn->prepare($sql);
             $stmt->execute($insertValues);
-        }
-    }
-
-    /**
-     * Migrate PWD images into Omeka.
-     */
-    public function migrateImages()
-    {
-        $images = [];
-        foreach ($this->getTable('images') as $row) {
-            $data = [
-                'o:item_set' => [
-                    'o:id' => $this->itemSets['images'],
-                ],
-                'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
-                ],
-            ];
-
-            $mapping = [
-                [$row['imageName'], 'dcterms:title', 'literal'],
-                [$row['imageDateCreated'], 'dcterms:created', 'literal'],
-                [$row['imagePageCount'], 'bibo:numPages', 'literal'],
-            ];
-            $images[$row['imageID']] = $this->addValues($data, $mapping);
-        }
-
-        $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($images, 50, true) as $imagesChunk) {
-            $response = $api->batchCreate('items', $imagesChunk);
-            $this->mapTable('pwd_images', $response->getContent());
         }
     }
 }

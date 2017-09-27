@@ -45,6 +45,10 @@
     rdfs:comment "A secondary recipient of a document."@en ;
     rdfs:subPropertyOf bibo:recipient .
 
+:middleName a rdf:Property ;
+    rdfs:label "middle name"@en ;
+    rdfs:comment "A middle name."@en .
+
 :note a rdf:Property ;
     rdfs:label "note"@en ;
     rdfs:comment "A note about a resource."@en .

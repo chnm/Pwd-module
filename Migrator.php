@@ -218,7 +218,8 @@ class Migrator
             'label' => 'Repository',
             'resource_class' => 'foaf:Organization',
             'resource_template_property' => [
-                'dcterms:title' => [null, null, 'literal', false],
+                'dcterms:title' => ['name', null, 'literal', false],
+                'foaf:name' => ['name (copy)', null, 'literal', false],
                 'dcterms:identifier' => ['MARC organization code', null, 'literal', false],
                 'vcard:organization-name' => [null, null, 'literal', false],
                 'vcard:organization-unit' => [null, null, 'literal', false],
@@ -228,6 +229,92 @@ class Migrator
                 'vcard:postal-code' => [null, null, 'literal', false],
                 'foaf:phone' => [null, null, 'literal', false],
                 'vcard:note' => [null, null, 'literal', false],
+            ],
+        ],
+        'collections' => [
+            'label' => 'Collection',
+            'resource_class' => 'bibo:Collection',
+            'resource_template_property' => [
+                'dcterms:title' => [null, null, 'literal', false],
+                'bibo:shortTitle' => [null, null, 'literal', false],
+                'pwd:repository' => [null, null, 'resource', false],
+            ],
+        ],
+        'microfilms' => [
+            'label' => 'Microfilm',
+            'resource_class' => 'pwd:Microfilm',
+            'resource_template_property' => [
+                'dcterms:title' => [null, null, 'literal', false],
+                'dcterms:bibliographicCitation' => [null, null, 'literal', false],
+                'pwd:repository' => [null, null, 'resource', false],
+            ],
+        ],
+        'publications' => [
+            'label' => 'Publication',
+            'resource_class' => 'dcterms:BibliographicResource',
+            'resource_template_property' => [
+                'dcterms:title' => [null, null, 'literal', false],
+                'dcterms:creator' => ['author', null, 'literal', false],
+                'dcterms:issued' => ['published', null, 'literal', false],
+                'dcterms:bibliographicCitation' => [null, null, 'literal', false],
+            ],
+        ],
+        'names' => [
+            'label' => 'Agent',
+            'resource_class' => 'foaf:Agent',
+            'resource_template_property' => [
+                'dcterms:title' => ['full name', null, 'literal', false],
+                'foaf:name' => ['full name (copy)', null, 'literal', false],
+                'dcterms:description' => [null, null, 'literal', false],
+                'vcard:note' => [null, null, 'literal', false],
+                'vcard:honorific-prefix' => [null, null, 'literal', false],
+                'vcard:given-name' => [null, null, 'literal', false],
+                'pwd:middleName' => [null, null, 'literal', false],
+                'vcard:family-name' => [null, null, 'literal', false],
+                'vcard:honorific-suffix' => [null, null, 'literal', false],
+            ],
+        ],
+        'documents' => [
+            'label' => 'Document',
+            'resource_class' => 'bibo:Document',
+            'resource_template_property' => [
+                'dcterms:title' => [null, null, 'literal', false],
+                'dcterms:description' => [null, null, 'literal', false],
+                'bibo:shortDescription' => ['short description', null, 'literal', false],
+                'dcterms:creator' => ['author', null, 'literal', false],
+                'pwd:secondaryAuthor' => [null, null, 'literal', false],
+                'pwd:authorNote' => [null, null, 'literal', false],
+                'bibo:recipient' => [null, null, 'literal', false],
+                'pwd:secondaryRecipient' => [null, null, 'literal', false],
+                'pwd:recipientNote' => [null, null, 'literal', false],
+                'dcterms:created' => [null, null, 'literal', false],
+                't:year' => ['year created', null, 'literal', false],
+                't:month' => ['month created', null, 'literal', false],
+                't:day' => ['day created', null, 'literal', false],
+                'pwd:createdNote' => [null, null, 'literal', false],
+                'pwd:note' => [null, null, 'literal', false],
+                'pwd:contentNote' => [null, null, 'literal', false],
+                'pwd:citedNote' => [null, null, 'literal', false],
+                'pwd:notableAgent' => [null, null, 'literal', false],
+                'pwd:notableLocation' => [null, null, 'literal', false],
+                'pwd:notableItemThing' => [null, null, 'literal', false],
+                'pwd:notableIdeaIssue' => [null, null, 'literal', false],
+                'pwd:notablePhrase' => [null, null, 'literal', false],
+                'pwd:documentNumber' => [null, null, 'literal', false],
+                'bibo:pageStart' => [null, null, 'literal', false],
+                'bibo:numPages' => [null, null, 'literal', false],
+                'pwd:collection' => [null, null, 'resource', false],
+                'pwd:microfilm' => [null, null, 'resource', false],
+                'pwd:publication' => [null, null, 'resource', false],
+            ],
+        ],
+        'images' => [
+            'label' => 'Image',
+            'resource_class' => 'bibo:Image',
+            'resource_template_property' => [
+                'dcterms:title' => ['name', null, 'literal', false],
+                'dcterms:created' => [null, null, 'literal', false],
+                'bibo:numPages' => [null, null, 'literal', false],
             ],
         ],
     ];
@@ -657,6 +744,7 @@ class Migrator
 
             $mapping = [
                 [$title, 'dcterms:title', 'literal'],
+                [$title, 'foaf:name', 'literal'],
                 [$row['repositoryMARCOrganizationCode'], 'dcterms:identifier', 'literal'],
                 [$row['repositoryName1'], 'vcard:organization-name', 'literal'],
                 [$row['repositoryName2'], 'vcard:organization-unit', 'literal'],
@@ -687,6 +775,9 @@ class Migrator
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['collections'],
+                ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['collections'],
                 ],
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
@@ -740,6 +831,9 @@ class Migrator
                 'o:item_set' => [
                     'o:id' => $this->itemSets['microfilms'],
                 ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['microfilms'],
+                ],
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['pwd:Microfilm'],
                 ],
@@ -773,6 +867,9 @@ class Migrator
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['publications'],
+                ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['publications'],
                 ],
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
@@ -810,6 +907,9 @@ class Migrator
                 'o:item_set' => [
                     'o:id' => $this->itemSets['names'],
                 ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['names'],
+                ],
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['foaf:Agent'],
                 ],
@@ -826,6 +926,7 @@ class Migrator
                 [$title, 'foaf:name', 'literal'],
                 [$row['nameTitle'], 'vcard:honorific-prefix', 'literal'],
                 [$row['nameFirst'], 'vcard:given-name', 'literal'],
+                [$row['nameMiddle'], 'pwd:middleName', 'literal'],
                 [$row['nameLast'], 'vcard:family-name', 'literal'],
                 [$row['nameSuffix'], 'vcard:honorific-suffix', 'literal'],
                 [$row['nameDescription'], 'dcterms:description', 'literal'],
@@ -862,6 +963,9 @@ class Migrator
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['documents'],
+                ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['documents'],
                 ],
             ];
             if ($row['documentFormatID']) {
@@ -988,6 +1092,9 @@ class Migrator
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['images'],
+                ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['images'],
                 ],
                 'o:resource_class' => [
                     'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],

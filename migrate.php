@@ -28,7 +28,7 @@ echo "Migrating microfilms..."; $migrator->migrateMicrofilms(); done();
 echo "Migrating publications..."; $migrator->migratePublications(); done();
 echo "Migrating names..."; $migrator->migrateNames(); done();
 echo "Migrating documents..."; $migrator->migrateDocuments(); done();
-echo "Migrating images..."; $migrator->migrateImages(); done();
+echo "Migrating images..."; $migrator->migrateImages(100); done();
 echo "Mapping reification data..."; $migrator->mapReificationData(); done();
 
 echo "------------------------------\n";

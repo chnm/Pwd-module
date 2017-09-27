@@ -33,6 +33,13 @@ class Migrator
     protected $reificationData = [];
 
     /**
+     * Cache of PWD image files.
+     *
+     * @var array
+     */
+    protected $imageFiles = [];
+
+    /**
      * Cache of PWD/Omeka identifier mappings
      *
      * @var array
@@ -81,7 +88,6 @@ class Migrator
         'item_set',
         'job',
         'media',
-        'module',
         'password_creation',
         'resource',
         'resource_template',
@@ -417,11 +423,24 @@ class Migrator
         $dsn = sprintf('mysql:host=%s;dbname=%s', $dbHost, $dbName);
         $this->conn = new PDO($dsn, $dbUsername, $dbPassword);
 
-        // Set the the Omeka service manager.
+        // Initialize the Omeka application.
         require "$omekaPath/bootstrap.php";
         $config = "$omekaPath/application/config/application.config.php";
-        $application = Zend\Mvc\Application::init(require $config);
+        $application = Omeka\Mvc\Application::init(require $config);
         $this->services = $application->getServiceManager();
+
+        // Authenticate the administrative user.
+        $user = $this->services->get('Omeka\EntityManager')->find('Omeka\Entity\User', 1);
+        $this->services->get('Omeka\AuthenticationService')->getStorage()->write($user);
+
+        // Verify module dependencies.
+        $modules = $this->services->get('Omeka\ModuleManager');
+        foreach (['FileSideload'] as $moduleName) {
+            $module = $modules->getModule($moduleName);
+            if (!$module || 'active' !== $module->getState())  {
+                throw new Exception(sprintf('The %s module must be installed.', $moduleName));
+            }
+        }
     }
 
     /**
@@ -572,6 +591,11 @@ class Migrator
                     'primary' . ucfirst($table) => $row['primary' . ucfirst($table)],
                 ];
             }
+        }
+
+        // Cache imageFiles data.
+        foreach ($this->getTable('imageFiles') as $row) {
+            $this->imageFiles[$row['imageID']][] = $row['imageFilePath'];
         }
     }
 
@@ -1084,11 +1108,15 @@ class Migrator
 
     /**
      * Migrate PWD images into Omeka.
+     *
+     * @param int $limit Limit images for testing
      */
-    public function migrateImages()
+    public function migrateImages($limit = null)
     {
         $images = [];
-        foreach ($this->getTable('images') as $row) {
+        foreach ($this->getTable('images') as $index => $row) {
+            if (is_numeric($limit) && $limit <= $index) break;
+
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['images'],
@@ -1101,11 +1129,21 @@ class Migrator
                 ],
             ];
 
+            $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
+            natcasesort($imageFiles);
+            foreach ($imageFiles as $imageFile) {
+                $data['o:media'][] = [
+                    'o:ingester' => 'sideload',
+                    'ingest_filename' => $imageFile,
+                ];
+            }
+
             $mapping = [
                 [$row['imageName'], 'dcterms:title', 'literal'],
                 [$row['imageDateCreated'], 'dcterms:created', 'literal'],
                 [$row['imagePageCount'], 'bibo:numPages', 'literal'],
             ];
+
             $images[$row['imageID']] = $this->addValues($data, $mapping);
         }
 

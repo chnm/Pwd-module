@@ -777,7 +777,7 @@ class Migrator
                 [$row['repositoryState'], 'vcard:region', 'literal'],
                 [$row['repositoryZipCode'], 'vcard:postal-code', 'literal'],
                 [$row['repositoryPhoneNumber'], 'foaf:phone', 'literal'],
-                [$row['repositoryRepositoryNotes'], 'vcard:note', 'literal'],
+                [$row['repositoryRepositoryNotes'], 'pwd:note', 'literal'],
             ];
             $repositories[$row['repositoryID']] = $this->addValues($data, $mapping);
         }
@@ -1140,7 +1140,6 @@ class Migrator
 
             $mapping = [
                 [$row['imageName'], 'dcterms:title', 'literal'],
-                [$row['imageDateCreated'], 'dcterms:created', 'literal'],
                 [$row['imagePageCount'], 'bibo:numPages', 'literal'],
             ];
 

@@ -1129,14 +1129,22 @@ class Migrator
                 ],
             ];
 
-            $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
-            natcasesort($imageFiles);
-            foreach ($imageFiles as $imageFile) {
-                $data['o:media'][] = [
-                    'o:ingester' => 'sideload',
-                    'ingest_filename' => $imageFile,
-                ];
-            }
+            // Ingest media *once* then use backups of `media` and `pwd_images`
+            // to interleave media back into the database after the last
+            // migration process. Then move a backup of the files/ directory
+            // back to its original location. This avoids repeating the lengthy
+            // derivative creation process, which took over 24 hours to
+            // complete.
+
+            // Ingest media
+            //~ $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
+            //~ natcasesort($imageFiles);
+            //~ foreach ($imageFiles as $imageFile) {
+                //~ $data['o:media'][] = [
+                    //~ 'o:ingester' => 'sideload',
+                    //~ 'ingest_filename' => $imageFile,
+                //~ ];
+            //~ }
 
             $mapping = [
                 [$row['imageName'], 'dcterms:title', 'literal'],

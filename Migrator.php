@@ -1098,7 +1098,7 @@ class Migrator
                 $mapping[] = [$value, 'pwd:notablePhrase', 'literal'];
             }
 
-            // Map resources. Note that we don't map resources that don't exist.
+            // Map names. Note that we don't map names that don't exist.
             $names = $this->reificationData['documents_names'][$row['documentID']] ?? [];
             foreach ($names as $value) {
                 $oNameId = $this->mappings['pwd_names'][$value['nameID']] ?? null;
@@ -1109,38 +1109,30 @@ class Migrator
                     $mapping[] = [$oNameId, $term, 'resource'];
                 }
             }
-            $collections = $this->reificationData['documents_collections'][$row['documentID']] ?? [];
-            foreach ($collections as $value) {
-                $oCollectionId = $this->mappings['pwd_collections'][$value['collectionID']] ?? null;
-                if ($oCollectionId) {
-                    $mapping[] = [$oCollectionId, 'pwd:collection', 'resource'];
-                }
-                $oImageId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
-                if ($oImageId) {
-                    $mapping[] = [$oImageId, 'pwd:image', 'resource'];
+            // Map resources (documents, microfilms, publications, and images).
+            // Note that we don't map resources that don't exist and that we
+            // don't map an individual resource more than once.
+            $resourceVars = [
+                ['documents_collections', 'pwd_collections', 'collectionID', 'pwd:collection'],
+                ['documents_microfilms', 'pwd_microfilms', 'microfilmID', 'pwd:microfilm'],
+                ['documents_publications', 'pwd_publications', 'publicationID', 'pwd:publication'],
+            ];
+            $resourcesToMap = [];
+            foreach ($resourceVars as $resourceVar) {
+                $resources = $this->reificationData[$resourceVar[0]][$row['documentID']] ?? [];
+                foreach ($resources as $value) {
+                    $oId = $this->mappings[$resourceVar[1]][$value[$resourceVar[2]]] ?? null;
+                    if ($oId) {
+                        $resourcesToMap[$oId] = $resourceVar[3];
+                    }
+                    $oId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
+                    if ($oId) {
+                        $resourcesToMap[$oId] = 'pwd:image';
+                    }
                 }
             }
-            $microfilms = $this->reificationData['documents_microfilms'][$row['documentID']] ?? [];
-            foreach ($microfilms as $value) {
-                $oMicrofilmId = $this->mappings['pwd_microfilms'][$value['microfilmID']] ?? null;
-                if ($oMicrofilmId) {
-                    $mapping[] = [$oMicrofilmId, 'pwd:microfilm', 'resource'];
-                }
-                $oImageId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
-                if ($oImageId) {
-                    $mapping[] = [$oImageId, 'pwd:image', 'resource'];
-                }
-            }
-            $publications = $this->reificationData['documents_publications'][$row['documentID']] ?? [];
-            foreach ($publications as $value) {
-                $oPublicationId = $this->mappings['pwd_publications'][$value['publicationID']] ?? null;
-                if ($oPublicationId) {
-                    $mapping[] = [$oPublicationId, 'pwd:publication', 'resource'];
-                }
-                $oImageId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
-                if ($oImageId) {
-                    $mapping[] = [$oImageId, 'pwd:image', 'resource'];
-                }
+            foreach ($resourcesToMap as $key => $value) {
+                $mapping[] = [$key, $value, 'resource'];
             }
 
             $documents[$row['documentID']] = $this->addValues($data, $mapping);

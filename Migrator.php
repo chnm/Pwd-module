@@ -293,6 +293,7 @@ class Migrator
                 'pwd:collection' => [null, null, 'resource', false],
                 'pwd:microfilm' => [null, null, 'resource', false],
                 'pwd:publication' => [null, null, 'resource', false],
+                'pwd:image' => [null, null, 'resource', false],
                 'pwd:secondaryAuthor' => [null, null, 'literal', false],
                 'pwd:secondaryRecipient' => [null, null, 'literal', false],
                 'pwd:authorNote' => [null, null, 'literal', false],
@@ -968,6 +969,61 @@ class Migrator
     }
 
     /**
+     * Migrate PWD images into Omeka.
+     *
+     * @param int $limit Limit images for testing
+     */
+    public function migrateImages($limit = null)
+    {
+        $images = [];
+        foreach ($this->getTable('images') as $index => $row) {
+            if (is_numeric($limit) && $limit <= $index) break;
+
+            $data = [
+                'o:item_set' => [
+                    'o:id' => $this->itemSets['images'],
+                ],
+                'o:resource_template' => [
+                    'o:id' => $this->resourceTemplates['images'],
+                ],
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
+                ],
+            ];
+
+            // Ingest media *once* then use backups of `media` and `pwd_images`
+            // to interleave media back into the database after the last
+            // migration process. Then move a backup of the files/ directory
+            // back to its original location. This avoids repeating the lengthy
+            // derivative creation process, which took over 24 hours to
+            // complete.
+
+            // Ingest media
+            //~ $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
+            //~ natcasesort($imageFiles);
+            //~ foreach ($imageFiles as $imageFile) {
+                //~ $data['o:media'][] = [
+                    //~ 'o:ingester' => 'sideload',
+                    //~ 'ingest_filename' => $imageFile,
+                //~ ];
+            //~ }
+
+            $mapping = [
+                [$row['imageName'], 'dcterms:title', 'literal'],
+                [$row['imagePageCount'], 'bibo:numPages', 'literal'],
+            ];
+
+            $images[$row['imageID']] = $this->addValues($data, $mapping);
+        }
+
+        $api = $this->services->get('Omeka\ApiManager');
+        foreach (array_chunk($images, 100, true) as $imagesChunk) {
+            $response = $api->batchCreate('items', $imagesChunk);
+            $this->mapTable('pwd_images', $response->getContent());
+        }
+    }
+
+    /**
      * Migrate PWD documents into Omeka.
      *
      * @param int $limit Limit documents for testing
@@ -1054,6 +1110,10 @@ class Migrator
                 if ($oCollectionId) {
                     $mapping[] = [$oCollectionId, 'pwd:collection', 'resource'];
                 }
+                $oImageId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
+                if ($oImageId) {
+                    $mapping[] = [$oImageId, 'pwd:image', 'resource'];
+                }
             }
             $microfilms = $this->reificationData['documents_microfilms'][$row['documentID']] ?? [];
             foreach ($microfilms as $value) {
@@ -1061,12 +1121,20 @@ class Migrator
                 if ($oMicrofilmId) {
                     $mapping[] = [$oMicrofilmId, 'pwd:microfilm', 'resource'];
                 }
+                $oImageId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
+                if ($oImageId) {
+                    $mapping[] = [$oImageId, 'pwd:image', 'resource'];
+                }
             }
             $publications = $this->reificationData['documents_publications'][$row['documentID']] ?? [];
             foreach ($publications as $value) {
                 $oPublicationId = $this->mappings['pwd_publications'][$value['publicationID']] ?? null;
                 if ($oPublicationId) {
                     $mapping[] = [$oPublicationId, 'pwd:publication', 'resource'];
+                }
+                $oImageId = $this->mappings['pwd_images'][$value['imageID']] ?? null;
+                if ($oImageId) {
+                    $mapping[] = [$oImageId, 'pwd:image', 'resource'];
                 }
             }
 
@@ -1103,61 +1171,6 @@ class Migrator
             $conn = $this->services->get('Omeka\Connection');
             $stmt = $conn->prepare($sql);
             $stmt->execute($insertValues);
-        }
-    }
-
-    /**
-     * Migrate PWD images into Omeka.
-     *
-     * @param int $limit Limit images for testing
-     */
-    public function migrateImages($limit = null)
-    {
-        $images = [];
-        foreach ($this->getTable('images') as $index => $row) {
-            if (is_numeric($limit) && $limit <= $index) break;
-
-            $data = [
-                'o:item_set' => [
-                    'o:id' => $this->itemSets['images'],
-                ],
-                'o:resource_template' => [
-                    'o:id' => $this->resourceTemplates['images'],
-                ],
-                'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
-                ],
-            ];
-
-            // Ingest media *once* then use backups of `media` and `pwd_images`
-            // to interleave media back into the database after the last
-            // migration process. Then move a backup of the files/ directory
-            // back to its original location. This avoids repeating the lengthy
-            // derivative creation process, which took over 24 hours to
-            // complete.
-
-            // Ingest media
-            //~ $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
-            //~ natcasesort($imageFiles);
-            //~ foreach ($imageFiles as $imageFile) {
-                //~ $data['o:media'][] = [
-                    //~ 'o:ingester' => 'sideload',
-                    //~ 'ingest_filename' => $imageFile,
-                //~ ];
-            //~ }
-
-            $mapping = [
-                [$row['imageName'], 'dcterms:title', 'literal'],
-                [$row['imagePageCount'], 'bibo:numPages', 'literal'],
-            ];
-
-            $images[$row['imageID']] = $this->addValues($data, $mapping);
-        }
-
-        $api = $this->services->get('Omeka\ApiManager');
-        foreach (array_chunk($images, 100, true) as $imagesChunk) {
-            $response = $api->batchCreate('items', $imagesChunk);
-            $this->mapTable('pwd_images', $response->getContent());
         }
     }
 

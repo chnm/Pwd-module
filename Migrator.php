@@ -1040,6 +1040,13 @@ class Migrator
         foreach ($this->getTable('documents') as $index => $row) {
             if (is_numeric($limit) && $limit <= $index) break;
 
+            if ($row['documentFormatID']) {
+                $localName = $this->documentFormats[$row['documentFormatID']][0];
+                $prefix = in_array($localName, ['Document', 'Letter']) ? 'bibo' : 'pwd';
+                $resourceClass = "$prefix:$localName";
+            } else {
+                $resourceClass = 'bibo:Document';
+            }
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['documents'],
@@ -1047,14 +1054,10 @@ class Migrator
                 'o:resource_template' => [
                     'o:id' => $this->resourceTemplates['documents'],
                 ],
+                'o:resource_class' => [
+                    'o:id' => $this->vocabMembers['resource_class'][$resourceClass],
+                ],
             ];
-            if ($row['documentFormatID']) {
-                $localName = $this->documentFormats[$row['documentFormatID']][0];
-                $prefix = in_array($localName, ['Document', 'Letter']) ? 'bibo' : 'pwd';
-                $data['o:resource_class'] = [
-                    'o:id' => $this->vocabMembers['resource_class']["$prefix:$localName"],
-                ];
-            }
 
             $mapping = [
                 [$row['documentNumber'], 'pwd:documentNumber', 'literal'],

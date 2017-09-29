@@ -61,19 +61,30 @@ class Migrator
     protected $resourceTemplates = [];
 
     /**
-     * Do not migrate these special PWD repositories (no data to save).
+     * Do not migrate these special PWD repositories (no data to save):
      *
-     * Each have corresponding PWD collections:
-     *
-     * - CITE (3) => Cite only--no image (422)
-     * - PRINT (26) => Printed Version only (9)
-     * - TYPED (209) => Typed Version only (13)
-     * - HAND (210) => Handwritten Transcript only (150)
-     * - LISTED (232) => Document listed in Syrett's appendicies (800)
+     * - 3: CITE
+     * - 26: PRINT
+     * - 209: TYPED
+     * - 210: HAND
+     * - 232: LISTED
      *
      * @var array
      */
     protected $excludeRepositories = [3, 26, 209, 210, 232];
+
+    /**
+     * Do not migrate these special PWD collections:
+     *
+     * - 9: "Printed Version only" (assumed by existence of pwd:publication)
+     * - 13: "Typed Version only" (unknown use, likely obsolete)
+     * - 150: "Handwritten Transcript only" (unknown use, likely obsolete)
+     * - 422: "Cite only--no image" (assumed by existence of pwd:citedNote)
+     * - 800: "Document listed in Syrett's appendicies" (assumed by content of pwd:note)
+     *
+     * @var array
+     */
+    protected $excludeCollections = [9, 13, 150, 422, 800];
 
     /**
      * Tables to truncate during Omeka reversion
@@ -797,6 +808,9 @@ class Migrator
     {
         $collections = [];
         foreach ($this->getTable('collections') as $row) {
+            if (in_array($row['collectionID'], $this->excludeCollections)) {
+                continue;
+            }
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['collections'],

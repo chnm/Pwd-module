@@ -1077,7 +1077,9 @@ class Migrator
                 [$row['documentOtherRecipients'], 'pwd:recipientNote', 'literal']
             ];
 
-            if ($row['documentCiteCodeID']) {
+            // Do not migrate citeCodeID #1 ("Document in hand or verified in a
+            // collection, not a cited document").
+            if ($row['documentCiteCodeID'] && 1 != $row['documentCiteCodeID']) {
                 $mapping[] = [$citeCodes[$row['documentCiteCodeID']], 'pwd:citedNote', 'literal'];
             }
             foreach (explode(';', $row['documentPersonsGroups']) as $value) {

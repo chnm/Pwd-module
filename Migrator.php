@@ -582,7 +582,6 @@ class Migrator
         }
         // Import project-specific vocabularies.
         foreach ($this->vocabs as $vocab) {
-            printf("\n\t- importing vocab %s", $vocab['vocab']['o:namespace_uri']);
             $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
         }
     }

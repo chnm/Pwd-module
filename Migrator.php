@@ -118,7 +118,9 @@ class Migrator
         'job',
         'media',
         'password_creation',
+        'property',
         'resource',
+        'resource_class',
         'resource_template',
         'resource_template_property',
         'site',
@@ -130,6 +132,7 @@ class Migrator
         'site_setting',
         'user_setting',
         'value',
+        'vocabulary',
     ];
 
     /**
@@ -150,14 +153,20 @@ class Migrator
     /**
      * Vocabularies to import
      *
+     * Turtle (.n3) files taken from Linked Open Vocabularies. EasyRDF parses
+     * turtle files slowly so I've converted them to RDF/XML using the EasyRDF
+     * Converter webservice.
+     *
+     * @see http://lov.okfn.org/dataset/lov/
+     * @see http://www.easyrdf.org/converter
      * @var array
      */
     protected $vocabs = [
         [
-            'strategy' => 'url',
+            'strategy' => 'file',
             'options' => [
-                'url' => 'http://lov.okfn.org/dataset/lov/vocabs/vcard/versions/2014-05-22.n3',
-                'format' => 'turtle',
+                'file' => __DIR__ . '/vocabs/vcard.rdf',
+                'format' => 'rdfxml',
             ],
             'vocab' => [
                 'o:namespace_uri' => 'http://www.w3.org/2006/vcard/ns#',
@@ -167,10 +176,10 @@ class Migrator
             ],
         ],
         [
-            'strategy' => 'url',
+            'strategy' => 'file',
             'options' => [
-                'url' => 'http://lov.okfn.org/dataset/lov/vocabs/bio/versions/2011-06-14.n3',
-                'format' => 'turtle',
+                'file' => __DIR__ . '/vocabs/bio.rdf',
+                'format' => 'rdfxml',
             ],
             'vocab' => [
                 'o:namespace_uri' => 'http://purl.org/vocab/bio/0.1/',
@@ -180,10 +189,10 @@ class Migrator
             ],
         ],
         [
-            'strategy' => 'url',
+            'strategy' => 'file',
             'options' => [
-                'url' => 'http://lov.okfn.org/dataset/lov/vocabs/time/versions/2017-04-06.n3',
-                'format' => 'turtle',
+                'file' => __DIR__ . '/vocabs/time.rdf',
+                'format' => 'rdfxml',
             ],
             'vocab' => [
                 'o:namespace_uri' => 'http://www.w3.org/2006/time#',
@@ -195,7 +204,7 @@ class Migrator
         [
             'strategy' => 'file',
             'options' => [
-                'file' => __DIR__ . '/pwd.n3',
+                'file' => __DIR__ . '/vocabs/pwd.n3',
                 'format' => 'turtle',
             ],
             'vocab' => [
@@ -230,8 +239,8 @@ class Migrator
             ['Publications from which War Department documents were derived.', 'dcterms:description', 'literal'],
         ],
         'names' => [
-            ['Names', 'dcterms:title', 'literal'],
-            ['Names referenced within War Department documents.', 'dcterms:description', 'literal'],
+            ['Agents', 'dcterms:title', 'literal'],
+            ['People and groups referenced within War Department documents.', 'dcterms:description', 'literal'],
         ],
         'documents' => [
             ['Documents', 'dcterms:title', 'literal'],
@@ -560,24 +569,21 @@ class Migrator
      */
     public function importVocabs()
     {
-        $conn = $this->services->get('Omeka\Connection');
         $importer = $this->services->get('Omeka\RdfImporter');
-        $api = $this->services->get('Omeka\ApiManager');
+
+        // Import default vocabularies.
+        $installTask = new Omeka\Installation\Task\InstallDefaultVocabulariesTask;
+        $vocabs = $installTask->getVocabularies();
+        foreach ($vocabs as $vocab) {
+            $importer->import($vocab['strategy'], $vocab['vocabulary'], [
+                'file' => sprintf('%s/application/data/vocabularies/%s', OMEKA_PATH, $vocab['file']),
+                'format' => $vocab['format'],
+            ]);
+        }
+        // Import project-specific vocabularies.
         foreach ($this->vocabs as $vocab) {
-            // First check if the vocabulary is already imported.
-            $stmt = $conn->prepare('SELECT id FROM vocabulary WHERE namespace_uri = ?');
-            $stmt->execute([$vocab['vocab']['o:namespace_uri']]);
-            $id = $stmt->fetchColumn();
-            // Unlike other vocabularies, the PWD vocabulary will change over
-            // the course of development. Delete and re-import it during every
-            // migration.
-            if ($id && 'http://wardepartmentpapers.org/vocab#' === $vocab['vocab']['o:namespace_uri']) {
-                $api->delete('vocabularies', $id);
-                $id = false;
-            }
-            if (!$id) {
-                $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
-            }
+            printf("\n\t- importing vocab %s", $vocab['vocab']['o:namespace_uri']);
+            $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
         }
     }
 
@@ -768,7 +774,6 @@ class Migrator
         $repositories = [];
         foreach ($this->getTable('repositories') as $row) {
             if (in_array($row['repositoryID'], $this->excludeRepositories)) {
-                printf("\n\t- excluding repository %s", $row['repositoryMARCOrganizationCode']);
                 continue;
             }
             $data = [
@@ -1012,7 +1017,6 @@ class Migrator
         foreach ($this->getTable('images') as $index => $row) {
             if (is_numeric($limit) && $limit <= $index) break;
             if (in_array($row['imageID'], $this->excludeImages)) {
-                printf("\n\t- excluding image %s", $row['imageName']);
                 continue;
             }
 

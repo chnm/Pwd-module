@@ -87,6 +87,24 @@ class Migrator
     protected $excludeCollections = [9, 13, 150, 422, 800];
 
     /**
+     * Do not migrate these special PWD images:
+     *
+     * - 4828: "ZZZ00" (placeholder for "Printed Version only")
+     * - 18582: "ZZZ01" (unknown use, only two document/collection associations)
+     * - 10943: "ZZZ99" (placeholder for "Cite only--no image")
+     * - 19115: "ZZZ98" (placeholder for "Document listed in Syrett's appendicies")
+     * - 18196: "typescript" (placeholder for "Typed Version only")
+     * - 18238: "HAND" (placeholder for "Handwritten Transcript only")
+     * - 19124: "CITE" (placeholder for "Cite only--no image")
+     * - 18208: "PRINT" (placeholder for "Printed Version only")
+     * - 18195: "TEXT" (placeholder for "Handwritten Transcript only")
+     * - 18213: "TYPED" (placeholder for "Typed Version only")
+     *
+     * @var array
+     */
+    protected $excludeImages = [4828, 18582, 10943, 19115, 18196, 18238, 19124, 18208, 18195, 18213];
+
+    /**
      * Tables to truncate during Omeka reversion
      *
      * @var array
@@ -750,6 +768,7 @@ class Migrator
         $repositories = [];
         foreach ($this->getTable('repositories') as $row) {
             if (in_array($row['repositoryID'], $this->excludeRepositories)) {
+                printf("\n\t- excluding repository %s", $row['repositoryMARCOrganizationCode']);
                 continue;
             }
             $data = [
@@ -992,6 +1011,10 @@ class Migrator
         $images = [];
         foreach ($this->getTable('images') as $index => $row) {
             if (is_numeric($limit) && $limit <= $index) break;
+            if (in_array($row['imageID'], $this->excludeImages)) {
+                printf("\n\t- excluding image %s", $row['imageName']);
+                continue;
+            }
 
             $data = [
                 'o:item_set' => [

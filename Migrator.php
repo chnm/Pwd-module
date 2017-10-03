@@ -1008,6 +1008,14 @@ class Migrator
     /**
      * Migrate PWD images into Omeka.
      *
+     * Ingest media *once* then use backups of `media` and `pwd_images` to
+     * insert media back into the database after the last migration process.
+     * Then move a backup of the files/ directory back to its original location.
+     * This avoids repeating the lengthy derivative creation process, which took
+     * over 24 hours to complete.
+     *
+     * Disable "Ingest media" block after it's been run once.
+     *
      * @param int $limit Limit images for testing
      */
     public function migrateImages($limit = null)
@@ -1030,13 +1038,6 @@ class Migrator
                     'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
                 ],
             ];
-
-            // Ingest media *once* then use backups of `media` and `pwd_images`
-            // to interleave media back into the database after the last
-            // migration process. Then move a backup of the files/ directory
-            // back to its original location. This avoids repeating the lengthy
-            // derivative creation process, which took over 24 hours to
-            // complete.
 
             // Ingest media
             //~ $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
@@ -1061,6 +1062,59 @@ class Migrator
             $response = $api->batchCreate('items', $imagesChunk);
             $this->mapTable('pwd_images', $response->getContent());
         }
+    }
+
+    /**
+     * Insert previously ingested media into the media table.
+     *
+     * Assumes all images have already been ingested and that there are backups
+     * of the `media` and `pwd_images` tables from when the ingestion took
+     * place.
+     *
+     * Disable this method when ingesting media.
+     */
+    public function insertIngestedMedia()
+    {
+        $conn = $this->services->get('Omeka\Connection');
+
+        $pwdImagesBackup = [];
+        foreach ($conn->query('SELECT * FROM pwd_images_backup') as $row) {
+            $pwdImagesBackup[$row['id_omeka']] = $row['id_pwd'];
+        }
+        $conn->beginTransaction();
+        foreach ($conn->query('SELECT * FROM media_backup') as $row) {
+            $imageId = $pwdImagesBackup[$row['item_id']];
+            if (in_array($imageId, $this->excludeImages)) {
+                continue;
+            }
+
+            $sql = '
+            INSERT INTO resource (
+                resource_type, is_public, created, modified
+            ) VALUES (
+                ?, 1, NOW(), NOW()
+            )';
+            $stmt = $conn->prepare($sql);
+            $stmt->execute(['Omeka\Entity\Media']);
+
+            $sql = '
+            INSERT INTO media (
+                id, item_id, source, storage_id, sha256, position, ingester, renderer, media_type, extension, has_original, has_thumbnails
+            ) VALUES (
+                ?, ?, ?, ?, ?, ?, "sideload", "file", "image/jpeg", "jpg", 1, 1
+            )';
+            $insertValues = [
+                $conn->lastInsertId(),
+                $this->mappings['pwd_images'][$imageId],
+                $row['source'],
+                $row['storage_id'],
+                $row['sha256'],
+                $row['position']
+            ];
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($insertValues);
+        }
+        $conn->commit();
     }
 
     /**

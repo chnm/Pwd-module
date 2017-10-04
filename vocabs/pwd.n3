@@ -32,8 +32,8 @@
     rdfs:range dcterms:BibliographicResource .
 
 :image a rdf:Property ;
-    rdfs:label "has image"@en ;
-    rdfs:comment "The document has this image."@en ;
+    rdfs:label "in image"@en ;
+    rdfs:comment "The document is in this image."@en ;
     rdfs:range bibo:Image .
 
 :documentNumber a rdf:Property ;

@@ -19,14 +19,7 @@ class Migrator
     protected $services;
 
     /**
-     * Cache of vocabulary members.
-     *
-     * @var array
-     */
-    protected $vocabMembers = [];
-
-    /**
-     * Cache of reification table data.
+     * Cache of PWD reification table data.
      *
      * @var array
      */
@@ -45,6 +38,13 @@ class Migrator
      * @var array
      */
     protected $mappings = [];
+
+    /**
+     * Cache of Omeka vocabulary members.
+     *
+     * @var array
+     */
+    protected $vocabMembers = [];
 
     /**
      * Cache of Omeka item sets
@@ -502,24 +502,30 @@ class Migrator
     }
 
     /**
-     * Revert Omeka to a newly installed state.
+     * Prepare migration.
      */
-    public function revertOmeka()
+    public function prepareMigration()
+    {
+        $this->prepareDatabase();
+        $this->prepareVocabularies();
+        $this->prepareItemSets();
+        $this->prepareResourceTemplates();
+        $this->prepareCache();
+    }
+
+    /**
+     * Prepare the Omeka database for migration.
+     */
+    public function prepareDatabase()
     {
         $conn = $this->services->get('Omeka\Connection');
+
+        // Revert Omeka to a newly installed state.
         $conn->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach ($this->truncateTables as $table) {
             $conn->exec(sprintf('TRUNCATE TABLE %s', $table));
         }
         $conn->exec('SET FOREIGN_KEY_CHECKS = 1');
-    }
-
-    /**
-     * Create Omeka tables needed for PWD migration.
-     */
-    public function createTables()
-    {
-        $conn = $this->services->get('Omeka\Connection');
 
         // Create PWD/Omeka mapping tables.
         $sql = sprintf('DROP TABLE IF EXISTS %s', implode(',', $this->mappingTables));
@@ -565,11 +571,12 @@ class Migrator
     }
 
     /**
-     * Import vocabularies needed for PWD migration.
+     * Prepare Omeka vocabularies for migration.
      */
-    public function importVocabs()
+    public function prepareVocabularies()
     {
         $importer = $this->services->get('Omeka\RdfImporter');
+        $conn = $this->services->get('Omeka\Connection');
 
         // Import default vocabularies.
         $installTask = new Omeka\Installation\Task\InstallDefaultVocabulariesTask;
@@ -584,15 +591,8 @@ class Migrator
         foreach ($this->vocabs as $vocab) {
             $importer->import($vocab['strategy'], $vocab['vocab'], $vocab['options']);
         }
-    }
 
-    /**
-     * Cache data.
-     */
-    public function cacheData()
-    {
-        // Cache vocabulary data (classes and properties).
-        $conn = $this->services->get('Omeka\Connection');
+        // Cache vocabulary members (classes and properties).
         foreach (['resource_class', 'property'] as $member) {
             $sql = 'SELECT m.id, m.local_name, v.prefix FROM %s m JOIN vocabulary v ON m.vocabulary_id = v.id';
             $stmt = $conn->query(sprintf($sql, $member));
@@ -601,6 +601,60 @@ class Migrator
                 $this->vocabMembers[$member][sprintf('%s:%s', $row['prefix'], $row['local_name'])] = $row['id'];
             }
         }
+    }
+
+    /**
+     * Prepare Omeka item sets for migration.
+     */
+    public function prepareItemSets()
+    {
+        $itemSets = [];
+        foreach ($this->itemSetMappings as $key => $mapping) {
+            $itemSets[$key] = $this->addValues([], $mapping);
+        }
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('item_sets', $itemSets);
+        foreach ($response->getContent() as $key => $itemSet) {
+            $this->itemSets[$key] = $itemSet->id();
+        }
+    }
+
+    /**
+     * Prepare resource templates for migration.
+     */
+    public function prepareResourceTemplates()
+    {
+        $resTemps = [];
+        foreach ($this->resourceTemplateMappings as $key => $mapping) {
+            $resTemp = [
+                'o:label' => $mapping['label'],
+                'o:resource_class' => ['o:id' => $this->vocabMembers['resource_class'][$mapping['resource_class']]],
+                'o:resource_template_property' => [],
+            ];
+            foreach ($mapping['resource_template_property'] as $term => $prop) {
+                $resTemp['o:resource_template_property'][] = [
+                    'o:property' => ['o:id' => $this->vocabMembers['property'][$term]],
+                    'o:alternate_label' => $prop[0],
+                    'o:alternate_comment' => $prop[1],
+                    'o:data_type' => $prop[2],
+                    'o:is_required' => $prop[3],
+                ];
+            }
+            $resTemps[$key] = $resTemp;
+        }
+        $api = $this->services->get('Omeka\ApiManager');
+        $response = $api->batchCreate('resource_templates', $resTemps);
+        foreach ($response->getContent() as $key => $resTemp) {
+            $this->resourceTemplates[$key] = $resTemp->id();
+        }
+    }
+
+    /**
+     * Prepare cache (in-memory PWD data) for migration.
+     */
+    public function prepareCache()
+    {
+        $conn = $this->services->get('Omeka\Connection');
 
         // Cache document/name reification data.
         foreach ($this->getTable('documents_names') as $row) {
@@ -632,137 +686,6 @@ class Migrator
         foreach ($this->getTable('imageFiles') as $row) {
             $this->imageFiles[$row['imageID']][] = $row['imageFilePath'];
         }
-    }
-
-    /**
-     * Create item sets needed for PWD migration.
-     */
-    public function createItemSets()
-    {
-        $itemSets = [];
-        foreach ($this->itemSetMappings as $key => $mapping) {
-            $itemSets[$key] = $this->addValues([], $mapping);
-        }
-        $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('item_sets', $itemSets);
-        foreach ($response->getContent() as $key => $itemSet) {
-            $this->itemSets[$key] = $itemSet->id();
-        }
-    }
-
-    /**
-     * Create resource templates needed for PWD migration.
-     */
-    public function createResourceTemplates()
-    {
-        $resTemps = [];
-        foreach ($this->resourceTemplateMappings as $key => $mapping) {
-            $resTemp = [
-                'o:label' => $mapping['label'],
-                'o:resource_class' => ['o:id' => $this->vocabMembers['resource_class'][$mapping['resource_class']]],
-                'o:resource_template_property' => [],
-            ];
-            foreach ($mapping['resource_template_property'] as $term => $prop) {
-                $resTemp['o:resource_template_property'][] = [
-                    'o:property' => ['o:id' => $this->vocabMembers['property'][$term]],
-                    'o:alternate_label' => $prop[0],
-                    'o:alternate_comment' => $prop[1],
-                    'o:data_type' => $prop[2],
-                    'o:is_required' => $prop[3],
-                ];
-            }
-            $resTemps[$key] = $resTemp;
-        }
-        $api = $this->services->get('Omeka\ApiManager');
-        $response = $api->batchCreate('resource_templates', $resTemps);
-        foreach ($response->getContent() as $key => $resTemp) {
-            $this->resourceTemplates[$key] = $resTemp->id();
-        }
-    }
-
-    /**
-     * Get the PDO statement for iterating all rows of a PWD table.
-     *
-     * @param string $table The PWD table name
-     * @return PDOStatement
-     */
-    public function getTable($table)
-    {
-        return $this->conn->query(sprintf('SELECT * FROM %s', $table));
-    }
-
-    /**
-     * Map PWD identifiers to Omeka identifiers.
-     *
-     * @param string $table Mapping table name
-     * @param array $content Batch create response content
-     */
-    public function mapTable($table, $content)
-    {
-        $insertValues = [];
-        foreach ($content as $key => $value) {
-            $this->mappings[$table][$key] = $value->id(); // Cache the mappings
-            $insertValues[] = $key;
-            $insertValues[] = $value->id();
-        }
-        $sql = sprintf(
-            'INSERT INTO %s (id_pwd, id_omeka) VALUES %s',
-            $table,
-            implode(', ', array_fill(0, count($content), '(?, ?)'))
-        );
-        $conn = $this->services->get('Omeka\Connection');
-        $stmt = $conn->prepare($sql);
-        $stmt->execute($insertValues);
-    }
-
-    /**
-     * Add a value to Omeka resource entity data.
-     *
-     * @param array $data
-     * @param string $value
-     * @param string $term
-     * @param string $type
-     * @return array
-     */
-    public function addValue(array $data, $value, $term, $type)
-    {
-        // A value must not be null or an empty string.
-        if (null !== $value && '' !== trim($value)) {
-            $dataValue = ['property_id' => $this->vocabMembers['property'][$term]];
-            switch ($type) {
-                case 'uri':
-                    $dataValue['type'] = 'uri';
-                    $dataValue['@id'] = $value;
-                    break;
-                case 'resource':
-                    $dataValue['type'] = 'resource';
-                    $dataValue['value_resource_id'] = $value;
-                    break;
-                case 'literal':
-                default:
-                    $dataValue['type'] = 'literal';
-                    // Encode ISO-8859-1 strings to UTF-8.
-                    $dataValue['@value'] = utf8_encode($value);
-            }
-            $data[$term][] = $dataValue;
-        }
-        return $data;
-    }
-
-    /**
-     * Add multiple values to Omeka resource entity data, given mapping
-     * instructions.
-     *
-     * @param array $data
-     * @param array $mapping
-     * @return array
-     */
-    public function addValues(array $data, array $mapping)
-    {
-        foreach ($mapping as $map) {
-            $data = $this->addValue($data, $map[0], $map[1], $map[2]);
-        }
-        return $data;
     }
 
     /**
@@ -1016,13 +939,12 @@ class Migrator
      *
      * Disable "Ingest media" block after it's been run once.
      *
-     * @param int $limit Limit images for testing
+     * @param bool $ingestMedia Whether to ingest media (very long process)
      */
-    public function migrateImages($limit = null)
+    public function migrateImages($ingestMedia = false)
     {
         $images = [];
         foreach ($this->getTable('images') as $index => $row) {
-            if (is_numeric($limit) && $limit <= $index) break;
             if (in_array($row['imageID'], $this->excludeImages)) {
                 continue;
             }
@@ -1039,15 +961,16 @@ class Migrator
                 ],
             ];
 
-            // Ingest media
-            //~ $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
-            //~ natcasesort($imageFiles);
-            //~ foreach ($imageFiles as $imageFile) {
-                //~ $data['o:media'][] = [
-                    //~ 'o:ingester' => 'sideload',
-                    //~ 'ingest_filename' => $imageFile,
-                //~ ];
-            //~ }
+            if ($ingestMedia) {
+                $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
+                natcasesort($imageFiles);
+                foreach ($imageFiles as $imageFile) {
+                    $data['o:media'][] = [
+                        'o:ingester' => 'sideload',
+                        'ingest_filename' => $imageFile,
+                    ];
+                }
+            }
 
             $mapping = [
                 [$row['imageName'], 'dcterms:title', 'literal'],
@@ -1119,10 +1042,8 @@ class Migrator
 
     /**
      * Migrate PWD documents into Omeka.
-     *
-     * @param int $limit Limit documents for testing
      */
-    public function migrateDocuments($limit = null)
+    public function migrateDocuments()
     {
         $citeCodes = [];
         foreach ($this->getTable('citeCodes') as $row) {
@@ -1132,8 +1053,6 @@ class Migrator
         $documents = [];
         $transcriptionData = [];
         foreach ($this->getTable('documents') as $index => $row) {
-            if (is_numeric($limit) && $limit <= $index) break;
-
             if ($row['documentFormatID']) {
                 $localName = $this->documentFormats[$row['documentFormatID']][0];
                 $prefix = in_array($localName, ['Document', 'Letter']) ? 'bibo' : 'pwd';
@@ -1276,10 +1195,6 @@ class Migrator
         $tokenCount = 0;
         $insertValues = [];
         foreach ($this->reificationData['documents_names'] as $key => $values) {
-            if (!isset($this->mappings['pwd_documents'][$key])) {
-                // Avoid error if a document limit was set.
-                continue;
-            }
             foreach ($values as $value) {
                 $insertValues[] = $this->mappings['pwd_documents'][$key];
                 $insertValues[] = $this->mappings['pwd_names'][$value['nameID']] ?? null;
@@ -1306,7 +1221,7 @@ class Migrator
             $insertValues = [];
             foreach ($this->reificationData["documents_{$table}s"] as $key => $values) {
                 if (!isset($this->mappings['pwd_documents'][$key])) {
-                    // Avoid error if a document limit was set.
+                    // Documents listed in reification tables may not exist.
                     continue;
                 }
                 foreach ($values as $value) {
@@ -1329,5 +1244,90 @@ class Migrator
             $stmt = $conn->prepare($sql);
             $stmt->execute($insertValues);
         }
+    }
+
+    /**
+     * Get the PDO statement for iterating all rows of a PWD table.
+     *
+     * @param string $table The PWD table name
+     * @return PDOStatement
+     */
+    protected function getTable($table)
+    {
+        return $this->conn->query(sprintf('SELECT * FROM %s', $table));
+    }
+
+    /**
+     * Map PWD identifiers to Omeka identifiers.
+     *
+     * @param string $table Mapping table name
+     * @param array $content Batch create response content
+     */
+    protected function mapTable($table, $content)
+    {
+        $insertValues = [];
+        foreach ($content as $key => $value) {
+            $this->mappings[$table][$key] = $value->id(); // Cache the mappings
+            $insertValues[] = $key;
+            $insertValues[] = $value->id();
+        }
+        $sql = sprintf(
+            'INSERT INTO %s (id_pwd, id_omeka) VALUES %s',
+            $table,
+            implode(', ', array_fill(0, count($content), '(?, ?)'))
+        );
+        $conn = $this->services->get('Omeka\Connection');
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($insertValues);
+    }
+
+    /**
+     * Add a value to Omeka resource entity data.
+     *
+     * @param array $data
+     * @param string $value
+     * @param string $term
+     * @param string $type
+     * @return array
+     */
+    protected function addValue(array $data, $value, $term, $type)
+    {
+        // A value must not be null or an empty string.
+        if (null !== $value && '' !== trim($value)) {
+            $dataValue = ['property_id' => $this->vocabMembers['property'][$term]];
+            switch ($type) {
+                case 'uri':
+                    $dataValue['type'] = 'uri';
+                    $dataValue['@id'] = $value;
+                    break;
+                case 'resource':
+                    $dataValue['type'] = 'resource';
+                    $dataValue['value_resource_id'] = $value;
+                    break;
+                case 'literal':
+                default:
+                    $dataValue['type'] = 'literal';
+                    // Encode ISO-8859-1 strings to UTF-8.
+                    $dataValue['@value'] = utf8_encode($value);
+            }
+            $data[$term][] = $dataValue;
+        }
+        return $data;
+    }
+
+    /**
+     * Add multiple values to Omeka resource entity data, given mapping
+     * instructions.
+     *
+     * @param array $data
+     * @param array $mapping
+     * @return array
+     */
+    protected function addValues(array $data, array $mapping)
+    {
+        foreach ($mapping as $map) {
+            $data = $this->addValue($data, $map[0], $map[1], $map[2]);
+        }
+        return $data;
     }
 }

@@ -1,2 +1,1 @@
-# pwd
-Papers of the War Department migration
+# Papers of the War Department

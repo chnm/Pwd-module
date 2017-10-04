@@ -19,6 +19,13 @@ class Migrator
     protected $services;
 
     /**
+     * The path to the Omeka installation
+     *
+     * @var string
+     */
+    protected $omekaPath;
+
+    /**
      * Cache of PWD reification table data.
      *
      * @var array
@@ -458,6 +465,8 @@ class Migrator
      */
     public function __construct($dbHost, $dbName, $dbUsername, $dbPassword, $omekaPath)
     {
+        $this->omekaPath = $omekaPath;
+
         // Set the PWD database.
         $dsn = sprintf('mysql:host=%s;dbname=%s', $dbHost, $dbName);
         $this->conn = new PDO($dsn, $dbUsername, $dbPassword);
@@ -506,11 +515,28 @@ class Migrator
      */
     public function prepareMigration()
     {
+        $this->prepareFilesystem();
         $this->prepareDatabase();
         $this->prepareVocabularies();
         $this->prepareItemSets();
         $this->prepareResourceTemplates();
         $this->prepareCache();
+    }
+
+    /**
+     * Prepare the Omeka filesystem for migration.
+     */
+    public function prepareFilesystem()
+    {
+        // Delete all originals and derivatives from the files directory.
+        foreach (['original', 'large', 'medium', 'square'] as $dir) {
+            $files = glob(sprintf('%s/files/%s/*', $this->omekaPath, $dir));
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+        }
     }
 
     /**

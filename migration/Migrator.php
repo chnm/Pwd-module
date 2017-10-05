@@ -19,6 +19,13 @@ class Migrator
     protected $services;
 
     /**
+     * The path to the PWD large images directory
+     *
+     * @var string
+     */
+    protected $imagesPath;
+
+    /**
      * The path to the Omeka installation
      *
      * @var string
@@ -31,13 +38,6 @@ class Migrator
      * @var array
      */
     protected $reificationData = [];
-
-    /**
-     * Cache of PWD image files.
-     *
-     * @var array
-     */
-    protected $imageFiles = [];
 
     /**
      * Cache of PWD/Omeka identifier mappings
@@ -373,6 +373,8 @@ class Migrator
     ];
 
     /**
+     * Initialize the PWD database connection and Omeka application.
+     *
      * @param string $dbHost PWD database host
      * @param string $dbName PWD database name
      * @param string $dbUsername PWD database username
@@ -382,6 +384,7 @@ class Migrator
      */
     public function __construct($dbHost, $dbName, $dbUsername, $dbPassword, $imagesPath, $omekaPath)
     {
+        $this->imagesPath = $imagesPath;
         $this->omekaPath = $omekaPath;
 
         // Set the PWD database.
@@ -393,10 +396,31 @@ class Migrator
         $config = "$omekaPath/application/config/application.config.php";
         $application = Omeka\Mvc\Application::init(require $config);
         $this->services = $application->getServiceManager();
+    }
 
+    /**
+     * Prepare for migration.
+     */
+    public function prepareMigration()
+    {
+        $this->prepareApplication();
+        $this->prepareFilesystem();
+        $this->prepareDatabase();
+        $this->prepareVocabularies();
+        $this->prepareItemSets();
+        $this->prepareResourceTemplates();
+        $this->prepareCache();
+    }
+
+    /**
+     * Prepare the Omeka application for migration.
+     */
+    public function prepareApplication()
+    {
         // Authenticate the administrative user.
-        $user = $this->services->get('Omeka\EntityManager')->find('Omeka\Entity\User', 1);
-        $this->services->get('Omeka\AuthenticationService')->getStorage()->write($user);
+        $em = $this->services->get('Omeka\EntityManager');
+        $auth = $this->services->get('Omeka\AuthenticationService');
+        $auth->getStorage()->write($em->find('Omeka\Entity\User', 1));
 
         // Verify module dependencies.
         $modules = $this->services->get('Omeka\ModuleManager');
@@ -409,22 +433,8 @@ class Migrator
 
         // Configure modules.
         $settings = $this->services->get('Omeka\Settings');
-        $settings->set('file_sideload_directory', $imagesPath);
+        $settings->set('file_sideload_directory', $this->imagesPath);
         $settings->set('file_sideload_delete_file', 'no');
-
-    }
-
-    /**
-     * Prepare migration.
-     */
-    public function prepareMigration()
-    {
-        $this->prepareFilesystem();
-        $this->prepareDatabase();
-        $this->prepareVocabularies();
-        $this->prepareItemSets();
-        $this->prepareResourceTemplates();
-        $this->prepareCache();
     }
 
     /**
@@ -550,7 +560,7 @@ class Migrator
     }
 
     /**
-     * Prepare resource templates for migration.
+     * Prepare Omeka resource templates for migration.
      */
     public function prepareResourceTemplates()
     {
@@ -584,10 +594,8 @@ class Migrator
      */
     public function prepareCache()
     {
-        $conn = $this->services->get('Omeka\Connection');
-
         // Cache document/name reification data.
-        foreach ($this->getTable('documents_names') as $row) {
+        foreach ($this->getPwdTable('documents_names') as $row) {
             $this->reificationData['documents_names'][$row['documentID']][] = [
                 'nameID' => $row['nameID'],
                 'author' => $row['author'],
@@ -600,7 +608,7 @@ class Migrator
 
         // Cache document/image refication data.
         foreach (['collection', 'microfilm', 'publication'] as $table) {
-            foreach ($this->getTable("documents_{$table}s") as $row) {
+            foreach ($this->getPwdTable("documents_{$table}s") as $row) {
                 $this->reificationData["documents_{$table}s"][$row['documentID']][] = [
                     "{$table}ID" => $row["{$table}ID"],
                     'imageID' => $row['imageID'],
@@ -611,11 +619,6 @@ class Migrator
                 ];
             }
         }
-
-        // Cache imageFiles data.
-        foreach ($this->getTable('imageFiles') as $row) {
-            $this->imageFiles[$row['imageID']][] = $row['imageFilePath'];
-        }
     }
 
     /**
@@ -624,7 +627,7 @@ class Migrator
     public function migrateRepositories()
     {
         $repositories = [];
-        foreach ($this->getTable('repositories') as $row) {
+        foreach ($this->getPwdTable('repositories') as $row) {
             if (in_array($row['repositoryID'], $this->excludeRepositories)) {
                 continue;
             }
@@ -683,7 +686,7 @@ class Migrator
     public function migrateCollections()
     {
         $collections = [];
-        foreach ($this->getTable('collections') as $row) {
+        foreach ($this->getPwdTable('collections') as $row) {
             if (in_array($row['collectionID'], $this->excludeCollections)) {
                 continue;
             }
@@ -741,7 +744,7 @@ class Migrator
     public function migrateMicrofilms()
     {
         $microfilms = [];
-        foreach ($this->getTable('microfilms') as $row) {
+        foreach ($this->getPwdTable('microfilms') as $row) {
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['microfilms'],
@@ -778,7 +781,7 @@ class Migrator
     public function migratePublications()
     {
         $publications = [];
-        foreach ($this->getTable('publications') as $row) {
+        foreach ($this->getPwdTable('publications') as $row) {
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['publications'],
@@ -817,7 +820,7 @@ class Migrator
     public function migrateNames()
     {
         $names = [];
-        foreach ($this->getTable('names') as $row) {
+        foreach ($this->getPwdTable('names') as $row) {
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['names'],
@@ -864,8 +867,8 @@ class Migrator
      * Ingest media *once* then use backups of `media` and `pwd_images` to
      * insert media back into the database after the last migration process.
      * Then move a backup of the files/ directory back to its original location.
-     * This avoids repeating the lengthy derivative creation process, which took
-     * over 24 hours to complete.
+     * This avoids repeating the lengthy derivative creation process, which can
+     * take over 24 hours to complete.
      *
      * Disable "Ingest media" block after it's been run once.
      *
@@ -873,8 +876,15 @@ class Migrator
      */
     public function migrateImages($ingestMedia = false)
     {
+        if ($ingestMedia)  {
+            $imageFiles = [];
+            foreach ($this->getPwdTable('imageFiles') as $row) {
+                $imageFiles[$row['imageID']][] = $row['imageFilePath'];
+            }
+        }
+
         $images = [];
-        foreach ($this->getTable('images') as $index => $row) {
+        foreach ($this->getPwdTable('images') as $index => $row) {
             if (in_array($row['imageID'], $this->excludeImages)) {
                 continue;
             }
@@ -892,12 +902,12 @@ class Migrator
             ];
 
             if ($ingestMedia) {
-                $imageFiles = $this->imageFiles[$row['imageID']] ?? [];
-                natcasesort($imageFiles);
-                foreach ($imageFiles as $imageFile) {
+                $files = $imageFiles[$row['imageID']] ?? [];
+                natcasesort($files);
+                foreach ($files as $file) {
                     $data['o:media'][] = [
                         'o:ingester' => 'sideload',
-                        'ingest_filename' => $imageFile,
+                        'ingest_filename' => $file,
                     ];
                 }
             }
@@ -976,17 +986,17 @@ class Migrator
     public function migrateDocuments()
     {
         $citeCodes = [];
-        foreach ($this->getTable('citeCodes') as $row) {
+        foreach ($this->getPwdTable('citeCodes') as $row) {
             $citeCodes[$row['citeCodeID']] = $row['citeCodeName'];
         }
         $documentFormats = [];
-        foreach ($this->getTable('documentFormats') as $row) {
+        foreach ($this->getPwdTable('documentFormats') as $row) {
             $documentFormats[$row['documentFormatID']] = $row['documentFormatName'];
         }
 
         $documents = [];
         $transcriptionData = [];
-        foreach ($this->getTable('documents') as $index => $row) {
+        foreach ($this->getPwdTable('documents') as $index => $row) {
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['documents'],
@@ -1182,7 +1192,7 @@ class Migrator
      * @param string $table The PWD table name
      * @return PDOStatement
      */
-    protected function getTable($table)
+    protected function getPwdTable($table)
     {
         return $this->conn->query(sprintf('SELECT * FROM %s', $table));
     }

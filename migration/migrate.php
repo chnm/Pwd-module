@@ -15,10 +15,7 @@ echo "Initializing..."; $migrator = new Migrator(
     PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_IMAGES_PATH, PWD_OMEKA_PATH
 ); done();
 
-// Prepare migration
 echo "Preparing migration..."; $migrator->prepareMigration(); done();
-
-// Migrate
 echo "Migrating repositories..."; $migrator->migrateRepositories(); done();
 echo "Migrating collections..."; $migrator->migrateCollections(); done();
 echo "Migrating microfilms..."; $migrator->migrateMicrofilms(); done();

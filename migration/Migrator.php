@@ -81,17 +81,17 @@ class Migrator
     protected $excludeRepositories = [3, 26, 209, 210, 232];
 
     /**
-     * Do not migrate these special PWD collections:
-     *
-     * - 9: "Printed Version only" (assumed by existence of pwd:publication)
-     * - 13: "Typed Version only" (unknown use, likely obsolete)
-     * - 150: "Handwritten Transcript only" (unknown use, likely obsolete)
-     * - 422: "Cite only--no image" (assumed by existence of pwd:citedNote)
-     * - 800: "Document listed in Syrett's appendicies" (assumed by content of pwd:note)
+     * Special PWD collections
      *
      * @var array
      */
-    protected $excludeCollections = [9, 13, 150, 422, 800];
+    protected $specialCollections = [
+        9 => 'Printed Versions',
+        13 => 'Typed Versions',
+        150 => 'Handwritten Transcripts',
+        422 => 'Citations',
+        800 => 'Listed in Syrett\'s Appendicies',
+    ];
 
     /**
      * Do not migrate these special PWD images:
@@ -687,8 +687,8 @@ class Migrator
     {
         $collections = [];
         foreach ($this->getPwdTable('collections') as $row) {
-            if (in_array($row['collectionID'], $this->excludeCollections)) {
-                continue;
+            if (isset($this->specialCollections[$row['collectionID']])) {
+                $row['collectionLongName'] = $this->specialCollections[$row['collectionID']];
             }
             $data = [
                 'o:item_set' => [

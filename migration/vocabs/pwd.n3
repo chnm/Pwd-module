@@ -78,8 +78,8 @@
     rdfs:label "recipient note"@en ;
     rdfs:comment "A note about the recipients of a document."@en .
 
-:notableAgent a rdf:Property ;
-    rdfs:label "notable agent"@en ;
+:notablePersonGroup a rdf:Property ;
+    rdfs:label "notable person/group"@en ;
     rdfs:comment "A notable person/organization/group referenced in a document."@en .
 
 :notableLocation a rdf:Property ;
@@ -102,327 +102,37 @@
 # Classes
 #
 
+:Repository a rdfs:Class ;
+    rdfs:label "Repository"@en ;
+    rdfs:comment "Repository"@en ;
+    rdfs:subClassOf foaf:Organization .
+
+:Collection a rdfs:Class ;
+    rdfs:label "Collection"@en ;
+    rdfs:comment "Collection"@en ;
+    rdfs:subClassOf bibo:Collection .
+
 :Microfilm a rdfs:Class ;
     rdfs:label "Microfilm"@en ;
     rdfs:comment "Microfilm"@en ;
     rdfs:subClassOf bibo:CollectedDocument .
 
-:LetterAutograph a rdfs:Class ;
-    rdfs:label "Letter Autograph"@en ;
-    rdfs:comment "Autograph Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
+:Publication a rdfs:Class ;
+    rdfs:label "Publication"@en ;
+    rdfs:comment "Publication"@en ;
+    rdfs:subClassOf dcterms:BibliographicResource .
 
-:LetterAutographDraft a rdfs:Class ;
-    rdfs:label "Letter Autograph Draft"@en ;
-    rdfs:comment "Autograph Draft Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
+:Name a rdfs:Class ;
+    rdfs:label "Name"@en ;
+    rdfs:comment "Name"@en ;
+    rdfs:subClassOf foaf:Agent .
 
-:LetterAutographDraftSigned a rdfs:Class ;
-    rdfs:label "Letter Autograph Draft Signed"@en ;
-    rdfs:comment "Autograph Draft Letter Signed"@en ;
-    rdfs:subClassOf bibo:Letter .
+:Image a rdfs:Class ;
+    rdfs:label "Image"@en ;
+    rdfs:comment "Image"@en ;
+    rdfs:subClassOf bibo:Image .
 
-:LetterAutographFragment a rdfs:Class ;
-    rdfs:label "Letter Autograph Fragment"@en ;
-    rdfs:comment "Autograph Letter fragment"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterAutographFragmentSigned a rdfs:Class ;
-    rdfs:label "Letter Autograph Fragment Signed"@en ;
-    rdfs:comment "Autograph Letter fragment signed"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterAutographSigned a rdfs:Class ;
-    rdfs:label "Letter Autograph Signed"@en ;
-    rdfs:comment "Autograph Letter Signed"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterAutographUndeterminedType a rdfs:Class ;
-    rdfs:label "Letter Autograph Undetermined Type"@en ;
-    rdfs:comment "Autograph Letter of Undetermined Type"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterContemporaryCopy a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy"@en ;
-    rdfs:comment "Contemporary Copy of Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterContemporaryCopyAuthorFiles a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy Author Files"@en ;
-    rdfs:comment "Contemporary Copy of Letter made from Author's Files"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterContemporaryCopyRecipientFiles a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy Recipient Files"@en ;
-    rdfs:comment "Contemporary Copy of Letter made from Recipient's Files"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterContemporaryCopySigned a rdfs:Class ;
-    rdfs:label "Letter Contemporary Copy Signed"@en ;
-    rdfs:comment "Contemporary Copy of Letter Signed"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterDraft a rdfs:Class ;
-    rdfs:label "Letter Draft"@en ;
-    rdfs:comment "Draft Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterDraftSigned a rdfs:Class ;
-    rdfs:label "Letter Draft Signed"@en ;
-    rdfs:comment "Draft Letter Signed"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterExtract a rdfs:Class ;
-    rdfs:label "Letter Extract"@en ;
-    rdfs:comment "Extract of Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterFragment a rdfs:Class ;
-    rdfs:label "Letter Fragment"@en ;
-    rdfs:comment "Letter fragment"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterManuscriptTranslated a rdfs:Class ;
-    rdfs:label "Letter Manuscript Translated"@en ;
-    rdfs:comment "Manuscript Translation of Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterModernCopyTranscribed a rdfs:Class ;
-    rdfs:label "Letter Modern Copy Transcribed"@en ;
-    rdfs:comment "Printed transcription/modern copy of letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterPrintedPublished a rdfs:Class ;
-    rdfs:label "Letter Printed Published"@en ;
-    rdfs:comment "Printed or published letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterSigned a rdfs:Class ;
-    rdfs:label "Letter Signed"@en ;
-    rdfs:comment "Letter Signed"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterTranslated a rdfs:Class ;
-    rdfs:label "Letter Translated"@en ;
-    rdfs:comment "Translation (Contemporary or Modern) of Letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterTranslated2 a rdfs:Class ;
-    rdfs:label "Letter Translated2"@en ;
-    rdfs:comment "Translated letter (implies transcription)"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterTyped a rdfs:Class ;
-    rdfs:label "Letter Typed"@en ;
-    rdfs:comment "Typed letter"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:LetterUndeterminedType a rdfs:Class ;
-    rdfs:label "Letter Undetermined Type"@en ;
-    rdfs:comment "Letter, Type Undetermined"@en ;
-    rdfs:subClassOf bibo:Letter .
-
-:DocumentAutograph a rdfs:Class ;
-    rdfs:label "Document Autograph"@en ;
-    rdfs:comment "Autograph Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentAutographDraft a rdfs:Class ;
-    rdfs:label "Document Autograph Draft"@en ;
-    rdfs:comment "Autograph Draft Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentAutographSigned a rdfs:Class ;
-    rdfs:label "Document Autograph Signed"@en ;
-    rdfs:comment "Autograph Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentAutographDraftSigned a rdfs:Class ;
-    rdfs:label "Document Autograph Draft Signed"@en ;
-    rdfs:comment "Autograph Draft Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentCopy a rdfs:Class ;
-    rdfs:label "Document Copy"@en ;
-    rdfs:comment "Copy of document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentCopySigned a rdfs:Class ;
-    rdfs:label "Document Copy Signed"@en ;
-    rdfs:comment "Copy of Signed Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentDraft a rdfs:Class ;
-    rdfs:label "Document Draft"@en ;
-    rdfs:comment "Draft Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentDraftSigned a rdfs:Class ;
-    rdfs:label "Document Draft Signed"@en ;
-    rdfs:comment "Draft Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentDraftModernCopyHandTranscribed a rdfs:Class ;
-    rdfs:label "Document Draft Modern Copy Hand Transcribed"@en ;
-    rdfs:comment "Draft document, hand-written transcription/modern copy"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentManuscriptTranslated a rdfs:Class ;
-    rdfs:label "Document Manuscript Translated"@en ;
-    rdfs:comment "Manuscript Translation of Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentModernCopyPrintTranscribed a rdfs:Class ;
-    rdfs:label "Document Modern Copy Print Transcribed"@en ;
-    rdfs:comment "Printed transcription/modern copy of Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentPrinted a rdfs:Class ;
-    rdfs:label "Document Printed"@en ;
-    rdfs:comment "Printed Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentPrintedSigned a rdfs:Class ;
-    rdfs:label "Document Printed Signed"@en ;
-    rdfs:comment "Printed Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentPrintedPublished a rdfs:Class ;
-    rdfs:label "Document Printed Published"@en ;
-    rdfs:comment "Printed or published document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentSigned a rdfs:Class ;
-    rdfs:label "Document Signed"@en ;
-    rdfs:comment "Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentTranslated a rdfs:Class ;
-    rdfs:label "Document Translated"@en ;
-    rdfs:comment "Translation (Contemporary or Modern) of Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentTyped a rdfs:Class ;
-    rdfs:label "Document Typed"@en ;
-    rdfs:comment "Typed Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DocumentUndeterminedType a rdfs:Class ;
-    rdfs:label "Document Undetermined Type"@en ;
-    rdfs:comment "Document, type undetermined"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentAutograph a rdfs:Class ;
-    rdfs:label "Letter Document Autograph"@en ;
-    rdfs:comment "Autograph Letter / Autograph Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentAutographSigned a rdfs:Class ;
-    rdfs:label "Letter Document Autograph Signed"@en ;
-    rdfs:comment "Autograph Letter / Autograph Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentAutographSigned2 a rdfs:Class ;
-    rdfs:label "Letter Document Autograph Signed2"@en ;
-    rdfs:comment "Autograph Letter/Document Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentCited a rdfs:Class ;
-    rdfs:label "Letter Document Cited"@en ;
-    rdfs:comment "Cited letter or document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentContemporaryCopy a rdfs:Class ;
-    rdfs:label "Letter Document Contemporary Copy"@en ;
-    rdfs:comment "Contemporary Printed Copy of Letter/Document (other than PL/PD)"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentContemporaryCopyUnsigned a rdfs:Class ;
-    rdfs:label "Letter Document Contemporary Copy Unsigned"@en ;
-    rdfs:comment "Letter/Document (contemporary copy, in third hand, unsigned)"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentDraft a rdfs:Class ;
-    rdfs:label "Letter Document Draft"@en ;
-    rdfs:comment "Draft Letter / Draft Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentModernCopyPrintTranscribed a rdfs:Class ;
-    rdfs:label "Letter Document Modern Copy Print Transcribed"@en ;
-    rdfs:comment "Modern Printed Transcription of Letter/Document"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:LetterDocumentUndeterminedType a rdfs:Class ;
-    rdfs:label "Letter Document Undetermined Type"@en ;
-    rdfs:comment "Letter/Document Type undetermined"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:AutographDraft a rdfs:Class ;
-    rdfs:label "Autograph Draft"@en ;
-    rdfs:comment "Autograph Draft"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:AutographDraftSigned a rdfs:Class ;
-    rdfs:label "Autograph Draft Signed"@en ;
-    rdfs:comment "Autograph Signed Draft"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:DraftFragment a rdfs:Class ;
-    rdfs:label "Draft Fragment"@en ;
-    rdfs:comment "Draft Fragment"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:ContemporaryCertifiedCopyAutographSigned a rdfs:Class ;
-    rdfs:label "Contemporary Certified Copy Autograph Signed"@en ;
-    rdfs:comment "Autograph, Contemporaneous or Certified Copy, Signed"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:ContemporaryCertifiedCopy a rdfs:Class ;
-    rdfs:label "Contemporary Certified Copy"@en ;
-    rdfs:comment "Contemporaneous or Certified Copy (made for information of action)"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:ModernCopyPrintTranscribed a rdfs:Class ;
-    rdfs:label "Modern Copy Print Transcribed"@en ;
-    rdfs:comment "Printed or published transcription/modern copy"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:ModernCopyHandTranscribed a rdfs:Class ;
-    rdfs:label "Modern Copy Hand Transcribed"@en ;
-    rdfs:comment "Transcription/modern copy (hand written)"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:Extract a rdfs:Class ;
-    rdfs:label "Extract"@en ;
-    rdfs:comment "Extract"@en ;
-    rdfs:subClassOf bibo:Document .
-
-:Letterbook a rdfs:Class ;
-    rdfs:label "Letterbook"@en ;
-    rdfs:comment "Letterbook"@en ;
-    rdfs:subClassOf bibo:CollectedDocument .
-
-:LetterbookCopy a rdfs:Class ;
-    rdfs:label "Letterbook Copy"@en ;
-    rdfs:comment "Letterbook Copy"@en ;
-    rdfs:subClassOf bibo:CollectedDocument .
-
-:LetterbookAuthorCopy a rdfs:Class ;
-    rdfs:label "Letterbook Author Copy"@en ;
-    rdfs:comment "Author's Letterbook Copy"@en ;
-    rdfs:subClassOf bibo:CollectedDocument .
-
-:LetterbookAuthorCopyAuthor a rdfs:Class ;
-    rdfs:label "Letterbook Author Copy Author"@en ;
-    rdfs:comment "Author's Letterbook Copy, in hand of author"@en ;
-    rdfs:subClassOf bibo:CollectedDocument .
-
-:LetterbookRecipientCopy a rdfs:Class ;
-    rdfs:label "Letterbook Recipient Copy"@en ;
-    rdfs:comment "Recipient's Letterbook Copy"@en ;
-    rdfs:subClassOf bibo:CollectedDocument .
-
-:UndeterminedType a rdfs:Class ;
-    rdfs:label "Undetermined Type"@en ;
-    rdfs:comment "Type Undetermined"@en ;
+:Document a rdfs:Class ;
+    rdfs:label "Document"@en ;
+    rdfs:comment "Document"@en ;
     rdfs:subClassOf bibo:Document .

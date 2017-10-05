@@ -246,8 +246,8 @@ class Migrator
             ['Publications from which War Department documents were derived.', 'dcterms:description', 'literal'],
         ],
         'names' => [
-            ['Agents', 'dcterms:title', 'literal'],
-            ['People and groups referenced within War Department documents.', 'dcterms:description', 'literal'],
+            ['Names', 'dcterms:title', 'literal'],
+            ['People and group names referenced within War Department documents.', 'dcterms:description', 'literal'],
         ],
         'documents' => [
             ['Documents', 'dcterms:title', 'literal'],
@@ -267,7 +267,7 @@ class Migrator
     protected $resourceTemplateMappings = [
         'repositories' => [
             'label' => 'Repository',
-            'resource_class' => 'foaf:Organization',
+            'resource_class' => 'pwd:Repository',
             'resource_template_property' => [
                 'dcterms:title' => ['name', null, 'literal', false],
                 'foaf:name' => ['name (copy)', null, 'literal', false],
@@ -284,7 +284,7 @@ class Migrator
         ],
         'collections' => [
             'label' => 'Collection',
-            'resource_class' => 'bibo:Collection',
+            'resource_class' => 'pwd:Collection',
             'resource_template_property' => [
                 'dcterms:title' => [null, null, 'literal', false],
                 'bibo:shortTitle' => [null, null, 'literal', false],
@@ -302,7 +302,7 @@ class Migrator
         ],
         'publications' => [
             'label' => 'Publication',
-            'resource_class' => 'dcterms:BibliographicResource',
+            'resource_class' => 'pwd:Publication',
             'resource_template_property' => [
                 'dcterms:title' => [null, null, 'literal', false],
                 'dcterms:creator' => ['author', null, 'literal', false],
@@ -311,8 +311,8 @@ class Migrator
             ],
         ],
         'names' => [
-            'label' => 'Agent',
-            'resource_class' => 'foaf:Agent',
+            'label' => 'Name',
+            'resource_class' => 'pwd:Name',
             'resource_template_property' => [
                 'dcterms:title' => ['full name', null, 'literal', false],
                 'foaf:name' => ['full name (copy)', null, 'literal', false],
@@ -327,11 +327,12 @@ class Migrator
         ],
         'documents' => [
             'label' => 'Document',
-            'resource_class' => 'bibo:Document',
+            'resource_class' => 'pwd:Document',
             'resource_template_property' => [
                 'dcterms:title' => [null, null, 'literal', false],
                 'dcterms:description' => [null, null, 'literal', false],
                 'bibo:shortDescription' => ['short description', null, 'literal', false],
+                'dcterms:type' => [null, null, 'literal', false],
                 'dcterms:created' => [null, null, 'literal', false],
                 'dcterms:creator' => ['author', null, 'literal', false],
                 'pwd:secondaryAuthor' => [null, null, 'literal', false],
@@ -347,7 +348,7 @@ class Migrator
                 'pwd:authorNote' => [null, null, 'literal', false],
                 'pwd:recipientNote' => [null, null, 'literal', false],
                 'pwd:citedNote' => [null, null, 'literal', false],
-                'pwd:notableAgent' => [null, null, 'literal', false],
+                'pwd:notablePersonGroup' => [null, null, 'literal', false],
                 'pwd:notableLocation' => [null, null, 'literal', false],
                 'pwd:notableItemThing' => [null, null, 'literal', false],
                 'pwd:notableIdeaIssue' => [null, null, 'literal', false],
@@ -362,98 +363,13 @@ class Migrator
         ],
         'images' => [
             'label' => 'Image',
-            'resource_class' => 'bibo:Image',
+            'resource_class' => 'pwd:Image',
             'resource_template_property' => [
                 'dcterms:title' => ['name', null, 'literal', false],
                 'dcterms:created' => [null, null, 'literal', false],
                 'bibo:numPages' => [null, null, 'literal', false],
             ],
         ],
-    ];
-
-    /**
-     * Document formats, keyed by PWD identifier
-     *
-     * After modifying this array be sure to reflect the changes in pwd.n3 using
-     * the output of self::printDocumentFormatsN3().
-     *
-     * @var array
-     */
-    protected $documentFormats = [
-        // letter
-        5 =>  ['Letter', 'Letter'],
-        8 =>  ['LetterAutograph', 'Autograph Letter'],
-        44 => ['LetterAutographDraft', 'Autograph Draft Letter'],
-        62 => ['LetterAutographDraftSigned', 'Autograph Draft Letter Signed'],
-        68 => ['LetterAutographFragment', 'Autograph Letter fragment'],
-        60 => ['LetterAutographFragmentSigned', 'Autograph Letter fragment signed'],
-        3 =>  ['LetterAutographSigned', 'Autograph Letter Signed'],
-        33 => ['LetterAutographUndeterminedType', 'Autograph Letter of Undetermined Type'],
-        19 => ['LetterContemporaryCopy', 'Contemporary Copy of Letter'],
-        17 => ['LetterContemporaryCopyAuthorFiles', 'Contemporary Copy of Letter made from Author\'s Files'],
-        21 => ['LetterContemporaryCopyRecipientFiles', 'Contemporary Copy of Letter made from Recipient\'s Files'],
-        35 => ['LetterContemporaryCopySigned', 'Contemporary Copy of Letter Signed'],
-        22 => ['LetterDraft', 'Draft Letter'],
-        43 => ['LetterDraftSigned', 'Draft Letter Signed'],
-        20 => ['LetterExtract', 'Extract of Letter'],
-        54 => ['LetterFragment', 'Letter fragment'],
-        26 => ['LetterManuscriptTranslated', 'Manuscript Translation of Letter'],
-        40 => ['LetterModernCopyTranscribed', 'Printed transcription/modern copy of letter'],
-        37 => ['LetterPrintedPublished', 'Printed or published letter'],
-        1 =>  ['LetterSigned', 'Letter Signed'],
-        41 => ['LetterTranslated', 'Translation (Contemporary or Modern) of Letter'],
-        58 => ['LetterTranslated2', 'Translated letter (implies transcription)'],
-        56 => ['LetterTyped', 'Typed letter'],
-        29 => ['LetterUndeterminedType', 'Letter, Type Undetermined'],
-        // document
-        6 =>  ['Document', 'Document'],
-        25 => ['DocumentAutograph', 'Autograph Document'],
-        65 => ['DocumentAutographDraft', 'Autograph Draft Document'],
-        7 =>  ['DocumentAutographSigned', 'Autograph Document Signed'],
-        55 => ['DocumentAutographDraftSigned', 'Autograph Draft Document Signed'],
-        18 => ['DocumentCopy', 'Copy of document'],
-        36 => ['DocumentCopySigned', 'Copy of Signed Document'],
-        24 => ['DocumentDraft', 'Draft Document'],
-        64 => ['DocumentDraftSigned', 'Draft Document Signed'],
-        50 => ['DocumentDraftModernCopyHandTranscribed', 'Draft document, hand-written transcription/modern copy'],
-        32 => ['DocumentManuscriptTranslated', 'Manuscript Translation of Document'],
-        74 => ['DocumentModernCopyPrintTranscribed', 'Printed transcription/modern copy of Document'],
-        42 => ['DocumentPrinted', 'Printed Document'],
-        46 => ['DocumentPrintedSigned', 'Printed Document Signed'],
-        30 => ['DocumentPrintedPublished', 'Printed or published document'],
-        2 =>  ['DocumentSigned', 'Document Signed'],
-        52 => ['DocumentTranslated', 'Translation (Contemporary or Modern) of Document'],
-        57 => ['DocumentTyped', 'Typed Document'],
-        31 => ['DocumentUndeterminedType', 'Document, type undetermined'],
-        // letter/document
-        70 => ['LetterDocumentAutograph', 'Autograph Letter / Autograph Document'],
-        71 => ['LetterDocumentAutographSigned', 'Autograph Letter / Autograph Document Signed'],
-        66 => ['LetterDocumentAutographSigned2', 'Autograph Letter/Document Signed'],
-        38 => ['LetterDocumentCited', 'Cited letter or document'],
-        82 => ['LetterDocumentContemporaryCopy', 'Contemporary Printed Copy of Letter/Document (other than PL/PD)'],
-        72 => ['LetterDocumentContemporaryCopyUnsigned', 'Letter/Document (contemporary copy, in third hand, unsigned)'],
-        73 => ['LetterDocumentDraft', 'Draft Letter / Draft Document'],
-        76 => ['LetterDocumentModernCopyPrintTranscribed', 'Modern Printed Transcription of Letter/Document'],
-        75 => ['LetterDocumentUndeterminedType', 'Letter/Document Type undetermined'],
-        // draft
-        47 => ['AutographDraft', 'Autograph Draft'],
-        39 => ['AutographDraftSigned', 'Autograph Signed Draft'],
-        53 => ['DraftFragment', 'Draft Fragment'],
-        // copy
-        11 => ['ContemporaryCertifiedCopyAutographSigned', 'Autograph, Contemporaneous or Certified Copy, Signed'],
-        27 => ['ContemporaryCertifiedCopy', 'Contemporaneous or Certified Copy (made for information of action)'],
-        78 => ['ModernCopyPrintTranscribed', 'Printed or published transcription/modern copy'],
-        28 => ['ModernCopyHandTranscribed', 'Transcription/modern copy (hand written)'],
-        // extract
-        14 => ['Extract', 'Extract'],
-        // letterbook
-        12 => ['Letterbook', 'Letterbook'],
-        23 => ['LetterbookCopy', 'Letterbook Copy'],
-        16 => ['LetterbookAuthorCopy', 'Author\'s Letterbook Copy'],
-        79 => ['LetterbookAuthorCopyAuthor', 'Author\'s Letterbook Copy, in hand of author'],
-        67 => ['LetterbookRecipientCopy', 'Recipient\'s Letterbook Copy'],
-        // undetermined
-        69 => ['UndeterminedType', 'Type Undetermined'],
     ];
 
     /**
@@ -496,25 +412,6 @@ class Migrator
         $settings->set('file_sideload_directory', $imagesPath);
         $settings->set('file_sideload_delete_file', 'no');
 
-    }
-
-    /**
-     * Print document formats in RDF turtle format (N3).
-     *
-     * Pipe output to "xclip -selection clipboard" to cut-and-paste.
-     *
-     * @return string
-     */
-    public function printDocumentFormatsN3()
-    {
-        foreach ($this->documentFormats as $format) {
-            printf(
-                ":%s a rdfs:Class ;\n    rdfs:label \"%s\"@en ;\n    rdfs:comment \"%s\"@en .\n\n",
-                $format[0],
-                implode(' ', array_filter(preg_split('/(?=[A-Z])/', $format[0]))),
-                $format[1]
-            );
-        }
     }
 
     /**
@@ -739,7 +636,7 @@ class Migrator
                     'o:id' => $this->resourceTemplates['repositories'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['foaf:Organization'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Repository'],
                 ],
             ];
 
@@ -798,7 +695,7 @@ class Migrator
                     'o:id' => $this->resourceTemplates['collections'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Collection'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Collection'],
                 ],
             ];
 
@@ -890,7 +787,7 @@ class Migrator
                     'o:id' => $this->resourceTemplates['publications'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['dcterms:BibliographicResource'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Publication'],
                 ],
             ];
 
@@ -929,7 +826,7 @@ class Migrator
                     'o:id' => $this->resourceTemplates['names'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['foaf:Agent'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Name'],
                 ],
             ];
 
@@ -990,7 +887,7 @@ class Migrator
                     'o:id' => $this->resourceTemplates['images'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class']['bibo:Image'],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Image'],
                 ],
             ];
 
@@ -1082,17 +979,14 @@ class Migrator
         foreach ($this->getTable('citeCodes') as $row) {
             $citeCodes[$row['citeCodeID']] = $row['citeCodeName'];
         }
+        $documentFormats = [];
+        foreach ($this->getTable('documentFormats') as $row) {
+            $documentFormats[$row['documentFormatID']] = $row['documentFormatName'];
+        }
 
         $documents = [];
         $transcriptionData = [];
         foreach ($this->getTable('documents') as $index => $row) {
-            if ($row['documentFormatID']) {
-                $localName = $this->documentFormats[$row['documentFormatID']][0];
-                $prefix = in_array($localName, ['Document', 'Letter']) ? 'bibo' : 'pwd';
-                $resourceClass = "$prefix:$localName";
-            } else {
-                $resourceClass = 'bibo:Document';
-            }
             $data = [
                 'o:item_set' => [
                     'o:id' => $this->itemSets['documents'],
@@ -1101,7 +995,7 @@ class Migrator
                     'o:id' => $this->resourceTemplates['documents'],
                 ],
                 'o:resource_class' => [
-                    'o:id' => $this->vocabMembers['resource_class'][$resourceClass],
+                    'o:id' => $this->vocabMembers['resource_class']['pwd:Document'],
                 ],
             ];
 
@@ -1128,8 +1022,11 @@ class Migrator
             if ($row['documentCiteCodeID'] && 1 != $row['documentCiteCodeID']) {
                 $mapping[] = [$citeCodes[$row['documentCiteCodeID']], 'pwd:citedNote', 'literal'];
             }
+            if ($row['documentFormatID']) {
+                $mapping[] = [$documentFormats[$row['documentFormatID']], 'dcterms:type', 'literal'];
+            }
             foreach (explode(';', $row['documentPersonsGroups']) as $value) {
-                $mapping[] = [$value, 'pwd:notableAgent', 'literal'];
+                $mapping[] = [$value, 'pwd:notablePersonGroup', 'literal'];
             }
             foreach (explode(';', $row['documentLocations']) as $value) {
                 $mapping[] = [$value, 'pwd:notableLocation', 'literal'];

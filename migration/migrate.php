@@ -7,11 +7,13 @@ function done()
     printf(" done (%s MB)\n", round(memory_get_usage() / 1048576));
 }
 
-$migrator = new Migrator(PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_OMEKA_PATH);
-
 $timeStart = microtime(true);
 printf("Execution started: %s\n", date('c'));
 echo "------------------------------\n";
+
+echo "Initializing..."; $migrator = new Migrator(
+    PWD_DB_HOST, PWD_DB_NAME, PWD_DB_USERNAME, PWD_DB_PASSWORD, PWD_IMAGES_PATH, PWD_OMEKA_PATH
+); done();
 
 // Prepare migration
 echo "Preparing migration..."; $migrator->prepareMigration(); done();

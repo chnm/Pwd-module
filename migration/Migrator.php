@@ -461,9 +461,10 @@ class Migrator
      * @param string $dbName PWD database name
      * @param string $dbUsername PWD database username
      * @param string $dbPassword PWD database password
+     * @param string $imagesPath PWD large images path
      * @param string $omekaPath Omeka path
      */
-    public function __construct($dbHost, $dbName, $dbUsername, $dbPassword, $omekaPath)
+    public function __construct($dbHost, $dbName, $dbUsername, $dbPassword, $imagesPath, $omekaPath)
     {
         $this->omekaPath = $omekaPath;
 
@@ -489,6 +490,12 @@ class Migrator
                 throw new Exception(sprintf('The %s module must be installed.', $moduleName));
             }
         }
+
+        // Configure modules.
+        $settings = $this->services->get('Omeka\Settings');
+        $settings->set('file_sideload_directory', $imagesPath);
+        $settings->set('file_sideload_delete_file', 'no');
+
     }
 
     /**

@@ -73,30 +73,16 @@ class Module extends AbstractModule
     protected function getDocumentImages($item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
-
-        $documentImages = [];
-        $tables = ['pwd_document_collection', 'pwd_document_microfilm', 'pwd_document_publication'];
-        foreach ($tables as $table) {
-            $sql = "SELECT * FROM $table WHERE document_id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$item->id()]);
-            $documentImages[$table] = $stmt->fetchAll();
-        }
-        return $documentImages;
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_image WHERE document_id = ?');
+        $stmt->execute([$item->id()]);
+        return $stmt->fetchAll();
     }
 
     protected function getImageDocuments($item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
-
-        $imageDocuments = [];
-        $tables = ['pwd_document_collection', 'pwd_document_microfilm', 'pwd_document_publication'];
-        foreach ($tables as $table) {
-            $sql = "SELECT * FROM $table WHERE image_id = ?";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute([$item->id()]);
-            $imageDocuments[$table] = $stmt->fetchAll();
-        }
-        return $imageDocuments;
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_image WHERE image_id = ?');
+        $stmt->execute([$item->id()]);
+        return $stmt->fetchAll();
     }
 }

@@ -3,16 +3,16 @@
 <thead>
     <tr>
         <th>Document</th>
-        <th>Collection</th>
+        <th>Source</th>
         <th>Location</th>
     </tr>
 </thead>
 <tbody>
-<?php foreach ($imageDocuments['pwd_document_collection'] as $imageDoc): ?>
+<?php foreach ($imageDocuments as $imageDoc): ?>
 <?php
-$collection = null;
-if ($imageDoc['collection_id']) {
-    $collection = $this->api()->read('items', $imageDoc['collection_id'])->getContent();
+$source = null;
+if ($imageDoc['source_id']) {
+    $source = $this->api()->read('items', $imageDoc['source_id'])->getContent();
 }
 $document = null;
 if ($imageDoc['document_id']) {
@@ -21,7 +21,7 @@ if ($imageDoc['document_id']) {
 ?>
     <tr>
         <td><?php echo $document ? $document->link($document->displayTitle()) : '[no document]'; ?></td>
-        <td><?php echo $collection ? $collection->link($collection->displayTitle()) : '[no collection]'; ?></td>
+        <td><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></td>
         <td><?php echo $imageDoc['location']; ?></td>
     </tr>
 <?php endforeach; ?>

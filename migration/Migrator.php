@@ -468,16 +468,19 @@ class Migrator
         $conn->exec('SET FOREIGN_KEY_CHECKS = 1');
 
         // Create PWD/Omeka mapping tables.
-        $sql = sprintf('DROP TABLE IF EXISTS %s', implode(',', $this->mappingTables));
-        $conn->exec($sql);
         foreach ($this->mappingTables as $table) {
-            $sql = sprintf('CREATE TABLE %s (id_pwd int(11) NOT NULL, id_omeka int(11) NOT NULL)', $table);
-            $conn->exec($sql);
+            $conn->exec("DROP TABLE IF EXISTS $table");
+            $conn->exec("
+            CREATE TABLE $table (
+                id_pwd int(11) NOT NULL,
+                id_omeka int(11) NOT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
 
         // Create document transcription table.
         $conn->exec('DROP TABLE IF EXISTS pwd_transcriptions');
-        $conn->exec('CREATE TABLE pwd_transcriptions (
+        $conn->exec('
+        CREATE TABLE pwd_transcriptions (
             id_omeka int(11) NOT NULL,
             nominate tinyint(1) DEFAULT NULL,
             transcription MEDIUMTEXT COLLATE utf8mb4_unicode_ci
@@ -485,7 +488,8 @@ class Migrator
 
         // Create documents/names reification table.
         $conn->exec('DROP TABLE IF EXISTS pwd_document_name');
-        $conn->exec('CREATE TABLE pwd_document_name (
+        $conn->exec('
+        CREATE TABLE pwd_document_name (
             id int(11) NOT NULL AUTO_INCREMENT,
             document_id int(11) NOT NULL,
             name_id int(11) DEFAULT NULL,
@@ -497,21 +501,21 @@ class Migrator
             PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
-        // Create document/image reification tables.
-        foreach (['collection', 'microfilm', 'publication'] as $table) {
-            $conn->exec("DROP TABLE IF EXISTS pwd_document_$table");
-            $conn->exec("CREATE TABLE pwd_document_{$table} (
-                id int(11) NOT NULL AUTO_INCREMENT,
-                document_id int(11) NOT NULL,
-                {$table}_id int(11) DEFAULT NULL,
-                image_id int(11) DEFAULT NULL,
-                is_primary tinyint(1) DEFAULT NULL,
-                page_number int(11) DEFAULT NULL,
-                page_count int(11) DEFAULT NULL,
-                location TEXT COLLATE utf8mb4_unicode_ci,
-                PRIMARY KEY (id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-        }
+        // Create document/image reification table.
+        $conn->exec("DROP TABLE IF EXISTS pwd_document_image");
+        $conn->exec('
+        CREATE TABLE pwd_document_image (
+            id int(11) NOT NULL AUTO_INCREMENT,
+            document_id int(11) NOT NULL,
+            image_id int(11) DEFAULT NULL,
+            source_id int(11) DEFAULT NULL,
+            source_type ENUM ("collection", "microfilm", "publication"),
+            location TEXT COLLATE utf8mb4_unicode_ci,
+            is_primary tinyint(1) DEFAULT NULL,
+            page_number int(11) DEFAULT NULL,
+            page_count int(11) DEFAULT NULL,
+            PRIMARY KEY (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     }
 
     /**
@@ -1170,20 +1174,21 @@ class Migrator
                 }
                 foreach ($values as $value) {
                     $insertValues[] = $this->mappings['pwd_documents'][$key];
-                    $insertValues[] = $this->mappings["pwd_{$table}s"][$value["{$table}ID"]] ?? null;
                     $insertValues[] = $this->mappings['pwd_images'][$value['imageID']] ?? null;
+                    $insertValues[] = $this->mappings["pwd_{$table}s"][$value["{$table}ID"]] ?? null;
+                    $insertValues[] = $table;
+                    $insertValues[] = $value["{$table}Location"] ? utf8_encode($value["{$table}Location"]) : null;
                     $insertValues[] = $value['primary' . ucfirst($table)];
                     $insertValues[] = $value['imagePageNumber'];
                     $insertValues[] = $value['pageCount'];
-                    $insertValues[] = $value["{$table}Location"] ? utf8_encode($value["{$table}Location"]) : null;
                     $tokenCount++;
                 }
             }
             $sql = sprintf(
-                "INSERT INTO pwd_document_{$table} (
-                    document_id, {$table}_id, image_id, is_primary, page_number, page_count, location
+                "INSERT INTO pwd_document_image (
+                    document_id, image_id, source_id, source_type, location, is_primary, page_number, page_count
                 ) VALUES %s",
-                implode(', ', array_fill(0, $tokenCount, '(?, ?, ?, ?, ?, ?, ?)'))
+                implode(', ', array_fill(0, $tokenCount, '(?, ?, ?, ?, ?, ?, ?, ?)'))
             );
             $stmt = $conn->prepare($sql);
             $stmt->execute($insertValues);

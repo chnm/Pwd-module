@@ -1,1 +1,9 @@
-<?php echo $this->pageTitle('PWD : Image Viewer'); ?>
+<?php
+echo $this->pageTitle('PWD : Image Viewer');
+$media = $image->media();
+?>
+<?php if ($media): ?>
+
+<?php else: ?>
+<p>This image has no pages.</p>
+<?php endif; ?>

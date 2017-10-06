@@ -20,7 +20,12 @@ if ($docImage['image_id']) {
 }
 ?>
     <tr>
-        <td><?php echo $image ? $image->link($image->displayTitle()) : '[no image]'; ?></td>
+        <td><?php echo $image
+            ? $this->hyperlink(
+                $image->displayTitle(),
+                $this->url('admin/pwd/viewer', ['image-id' => $docImage['image_id'], 'document-image-id' => $docImage['id']])
+            )
+            : '[no image]'; ?></td>
         <td><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></td>
         <td><?php echo $docImage['location']; ?></td>
     </tr>

@@ -15,6 +15,46 @@ class Module extends AbstractModule
                     OMEKA_PATH . '/modules/Pwd/view',
                 ],
             ],
+            'controllers' => [
+                'invokables' => [
+                    'Pwd\Controller\Index' => 'Pwd\Controller\IndexController',
+                ],
+            ],
+            'router' => [
+                'routes' => [
+                    'admin' => [
+                        'child_routes' => [
+                            'pwd' => [
+                                'type' => 'Literal',
+                                'options' => [
+                                    'route' => '/pwd',
+                                    'defaults' => [
+                                        '__NAMESPACE__' => 'Pwd\Controller',
+                                        'controller' => 'Index',
+                                        'action' => 'index',
+                                    ],
+                                ],
+                                'may_terminate' => true,
+                                'child_routes' => [
+                                    'viewer' => [
+                                        'type' => 'Segment',
+                                        'options' => [
+                                            'route' => '/viewer/:image-id[/:document-image-id]',
+                                            'constraints' => [
+                                                'image-id' => '\d+',
+                                                'document-image-id' => '\d+',
+                                            ],
+                                            'defaults' => [
+                                                'action' => 'viewer',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 

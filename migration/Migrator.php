@@ -486,26 +486,30 @@ class Migrator
         // Create documents/names reification table.
         $conn->exec('DROP TABLE IF EXISTS pwd_document_name');
         $conn->exec('CREATE TABLE pwd_document_name (
+            id int(11) NOT NULL AUTO_INCREMENT,
             document_id int(11) NOT NULL,
             name_id int(11) DEFAULT NULL,
             is_author tinyint(1) DEFAULT NULL,
             is_recipient tinyint(1) DEFAULT NULL,
             is_primary tinyint(1) DEFAULT NULL,
             location TEXT COLLATE utf8mb4_unicode_ci,
-            notes TEXT COLLATE utf8mb4_unicode_ci
+            notes TEXT COLLATE utf8mb4_unicode_ci,
+            PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
         // Create document/image reification tables.
         foreach (['collection', 'microfilm', 'publication'] as $table) {
             $conn->exec("DROP TABLE IF EXISTS pwd_document_$table");
             $conn->exec("CREATE TABLE pwd_document_{$table} (
+                id int(11) NOT NULL AUTO_INCREMENT,
                 document_id int(11) NOT NULL,
                 {$table}_id int(11) DEFAULT NULL,
                 image_id int(11) DEFAULT NULL,
                 is_primary tinyint(1) DEFAULT NULL,
                 page_number int(11) DEFAULT NULL,
                 page_count int(11) DEFAULT NULL,
-                location TEXT COLLATE utf8mb4_unicode_ci
+                location TEXT COLLATE utf8mb4_unicode_ci,
+                PRIMARY KEY (id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
     }

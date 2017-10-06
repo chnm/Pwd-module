@@ -1,0 +1,30 @@
+<div id="pwd-image-documents" class="section">
+<table class="tablesaw" data-tablesaw-mode="stack">
+<thead>
+    <tr>
+        <th>Document</th>
+        <th>Collection</th>
+        <th>Location</th>
+    </tr>
+</thead>
+<tbody>
+<?php foreach ($imageDocuments['pwd_document_collection'] as $imageDoc): ?>
+<?php
+$collection = null;
+if ($imageDoc['collection_id']) {
+    $collection = $this->api()->read('items', $imageDoc['collection_id'])->getContent();
+}
+$document = null;
+if ($imageDoc['document_id']) {
+    $document = $this->api()->read('items', $imageDoc['document_id'])->getContent();
+}
+?>
+    <tr>
+        <td><?php echo $document ? $document->link($document->displayTitle()) : '[no document]'; ?></td>
+        <td><?php echo $collection ? $collection->link($collection->displayTitle()) : '[no collection]'; ?></td>
+        <td><?php echo $imageDoc['location']; ?></td>
+    </tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+</div>

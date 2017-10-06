@@ -1,12 +1,9 @@
 <div id="pwd-document-images" class="section">
-<table>
+<table class="tablesaw" data-tablesaw-mode="stack">
 <thead>
     <tr>
-        <th>This Image</th>
-        <th>In This Collection</th>
-        <th>Primary Image</th>
-        <th>Page Number</th>
-        <th>Page Count</th>
+        <th>Image</th>
+        <th>Collection</th>
         <th>Location</th>
     </tr>
 </thead>
@@ -25,9 +22,6 @@ if ($docImage['image_id']) {
     <tr>
         <td><?php echo $image ? $image->link($image->displayTitle()) : '[no image]'; ?></td>
         <td><?php echo $collection ? $collection->link($collection->displayTitle()) : '[no collection]'; ?></td>
-        <td><?php echo $docImage['is_primary']; ?></td>
-        <td><?php echo $docImage['page_number']; ?></td>
-        <td><?php echo $docImage['page_count']; ?></td>
         <td><?php echo $docImage['location']; ?></td>
     </tr>
 <?php endforeach; ?>

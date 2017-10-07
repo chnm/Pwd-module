@@ -6,17 +6,28 @@ use Zend\View\Model\ViewModel;
 
 class IndexController extends AbstractActionController
 {
+    protected $conn;
+
+    public function __construct($conn)
+    {
+        $this->conn = $conn;
+    }
+
     public function viewerAction()
     {
-        $response = $this->api()->read('items', $this->params('image-id'));
-        $image = $response->getContent();
-        if ('pwd:Image' !== $image->resourceClass()->term()) {
-            throw new \Exception('Item must be a pwd:Image to view.');
-        }
+        $stmt = $this->conn->prepare('SELECT * FROM pwd_document_image WHERE id = ?');
+        $stmt->execute([$this->params('document-image-id')]);
+        $documentImage = $stmt->fetch();
+
+        $image = $this->api()->read('items', $documentImage['image_id'])->getContent();
+        $document = $this->api()->read('items', $documentImage['document_id'])->getContent();
+        $source = $this->api()->read('items', $documentImage['source_id'])->getContent();
 
         $view = new ViewModel;
-        $item = $response->getContent();
+        $view->setVariable('documentImage', $documentImage);
         $view->setVariable('image', $image);
+        $view->setVariable('document', $document);
+        $view->setVariable('source', $source);
         return $view;
     }
 }

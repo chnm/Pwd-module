@@ -23,7 +23,11 @@ if ($docImage['image_id']) {
         <td><?php echo $image
             ? $this->hyperlink(
                 $image->displayTitle(),
-                $this->url('admin/pwd/viewer', ['image-id' => $docImage['image_id'], 'document-image-id' => $docImage['id']])
+                $this->url(
+                    'admin/pwd/viewer',
+                    ['document-image-id' => $docImage['id']],
+                    ['fragment' => $docImage['page_number'] ? sprintf('page%s', $docImage['page_number']) : null]
+                )
             )
             : '[no image]'; ?></td>
         <td><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></td>

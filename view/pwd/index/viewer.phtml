@@ -1,9 +1,23 @@
 <?php
-echo $this->pageTitle('PWD : Image Viewer');
+echo $this->pageTitle($document->displayTitle(), 1, 'PWD Document Viewer');
 $media = $image->media();
 ?>
+<ul>
+    <li><b>Document: </b><?php echo $document->link($document->displayTitle()); ?></li>
+    <li><b>Image: </b><?php echo $image->link($image->displayTitle()); ?></li>
+    <li><b>Source: </b><?php echo $source->link($source->displayTitle()); ?></li>
+    <li><b>Location: </b><?php echo $documentImage['location']; ?></li>
+<!--
+    <li><b>Primary: </b><?php echo $documentImage['is_primary']; ?></li>
+    <li><b>Page Number: </b><?php echo $documentImage['page_number']; ?></li>
+    <li><b>Page Count: </b><?php echo $documentImage['page_count']; ?></li>
+-->
+</ul>
 <?php if ($media): ?>
-
+<?php foreach ($media as $index => $page): ?>
+<h4 id="<?php printf('page%s', $index + 1); ?>"><?php printf('Page %s', $index + 1); ?></h4>
+<?php echo $page->render(); ?>
+<?php endforeach; ?>
 <?php else: ?>
-<p>This image has no pages.</p>
+<p>This document image has no pages.</p>
 <?php endif; ?>

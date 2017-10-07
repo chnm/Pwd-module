@@ -16,8 +16,8 @@ class Module extends AbstractModule
                 ],
             ],
             'controllers' => [
-                'invokables' => [
-                    'Pwd\Controller\Index' => 'Pwd\Controller\IndexController',
+                'factories' => [
+                    'Pwd\Controller\Index' => 'Pwd\Controller\IndexControllerFactory',
                 ],
             ],
             'router' => [
@@ -39,9 +39,8 @@ class Module extends AbstractModule
                                     'viewer' => [
                                         'type' => 'Segment',
                                         'options' => [
-                                            'route' => '/viewer/:image-id[/:document-image-id]',
+                                            'route' => '/viewer/:document-image-id',
                                             'constraints' => [
-                                                'image-id' => '\d+',
                                                 'document-image-id' => '\d+',
                                             ],
                                             'defaults' => [

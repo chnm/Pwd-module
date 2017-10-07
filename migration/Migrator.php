@@ -881,8 +881,9 @@ class Migrator
      * Disable "Ingest media" block after it's been run once.
      *
      * @param bool $ingestMedia Whether to ingest media (very long process)
+     * @param int $ingestLimit Limit how many items should ingest their media
      */
-    public function migrateImages($ingestMedia = false)
+    public function migrateImages($ingestMedia = false, $ingestLimit = null)
     {
         if ($ingestMedia)  {
             $imageFiles = [];
@@ -909,7 +910,7 @@ class Migrator
                 ],
             ];
 
-            if ($ingestMedia) {
+            if ($ingestMedia && (null === $ingestLimit || $index <= $ingestLimit)) {
                 $files = $imageFiles[$row['imageID']] ?? [];
                 natcasesort($files);
                 foreach ($files as $file) {

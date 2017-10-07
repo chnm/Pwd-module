@@ -22,7 +22,7 @@ if ($docImage['image_id']) {
     <tr>
         <td><?php echo $image
             ? $this->hyperlink(
-                $image->displayTitle(),
+                '[view in document viewer]',
                 $this->url(
                     'admin/pwd/viewer',
                     ['document-image-id' => $docImage['id']],

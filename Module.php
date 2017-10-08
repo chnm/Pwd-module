@@ -112,7 +112,7 @@ class Module extends AbstractModule
     protected function getDocumentImages($item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
-        $stmt = $conn->prepare('SELECT * FROM pwd_document_image WHERE document_id = ?');
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_image WHERE document_id = ? ORDER BY is_primary');
         $stmt->execute([$item->id()]);
         return $stmt->fetchAll();
     }
@@ -120,7 +120,7 @@ class Module extends AbstractModule
     protected function getImageDocuments($item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
-        $stmt = $conn->prepare('SELECT * FROM pwd_document_image WHERE image_id = ?');
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_image WHERE image_id = ? ORDER BY is_primary');
         $stmt->execute([$item->id()]);
         return $stmt->fetchAll();
     }

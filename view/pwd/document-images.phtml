@@ -4,7 +4,7 @@
     <tr>
         <th>Image</th>
         <th>Source</th>
-        <th>Location</th>
+        <th>Source location</th>
     </tr>
 </thead>
 <tbody>
@@ -18,18 +18,27 @@ $image = null;
 if ($docImage['image_id']) {
     $image = $this->api()->read('items', $docImage['image_id'])->getContent();
 }
+$imageText = [];
+if ($image) {
+    $imageText[] = $image->link($image->displayTitle());
+    if ($image->media()) {
+        $imageText[] = $this->hyperlink(
+            '[open in viewer]',
+            $this->url(
+                'admin/pwd/viewer',
+                ['document-image-id' => $docImage['id']],
+                ['fragment' => $docImage['page_number'] ? sprintf('page%s', $docImage['page_number']) : null]
+            )
+        );
+    } else {
+        $imageText[] = '[no pages]';
+    }
+} else {
+    $imageText[] = '[no image]';
+}
 ?>
     <tr>
-        <td><?php echo $image
-            ? $this->hyperlink(
-                '[view in document viewer]',
-                $this->url(
-                    'admin/pwd/viewer',
-                    ['document-image-id' => $docImage['id']],
-                    ['fragment' => $docImage['page_number'] ? sprintf('page%s', $docImage['page_number']) : null]
-                )
-            )
-            : '[no image]'; ?></td>
+        <td><?php echo implode(' : ', $imageText); ?></td>
         <td><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></td>
         <td><?php echo $docImage['location']; ?></td>
     </tr>

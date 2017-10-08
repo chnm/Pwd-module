@@ -14,6 +14,13 @@ $source = null;
 if ($imageDoc['source_id']) {
     $source = $this->api()->read('items', $imageDoc['source_id'])->getContent();
 }
+$sourceText = [];
+if ($source) {
+    $sourceText[] = ucfirst($imageDoc['source_type']);
+    $sourceText[] = $source->link($source->displayTitle());
+} else {
+    $sourceText[] = '[no source]';
+}
 $document = null;
 if ($imageDoc['document_id']) {
     $document = $this->api()->read('items', $imageDoc['document_id'])->getContent();
@@ -21,7 +28,7 @@ if ($imageDoc['document_id']) {
 ?>
     <tr>
         <td><?php echo $document ? $document->link($document->displayTitle()) : '[no document]'; ?></td>
-        <td><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></td>
+        <td><?php echo implode(' : ', $sourceText); ?></td>
         <td><?php echo $imageDoc['location']; ?></td>
     </tr>
 <?php endforeach; ?>

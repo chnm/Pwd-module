@@ -509,7 +509,7 @@ class Migrator
             document_id int(11) NOT NULL,
             image_id int(11) DEFAULT NULL,
             source_id int(11) DEFAULT NULL,
-            source_type ENUM ("collection", "microfilm", "publication"),
+            source_type ENUM ("collection", "microfilm", "publication") NOT NULL,
             location TEXT COLLATE utf8mb4_unicode_ci,
             is_primary tinyint(1) DEFAULT NULL,
             page_number int(11) DEFAULT NULL,

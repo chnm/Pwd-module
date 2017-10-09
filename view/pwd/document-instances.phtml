@@ -10,31 +10,37 @@
 </thead>
 <tbody>
 <?php foreach ($documentInstances as $instance): ?>
-<?php
-$source = null;
-if ($instance['source_id']) {
-    $source = $this->api()->read('items', $instance['source_id'])->getContent();
-}
-$image = null;
-if ($instance['image_id']) {
-    $image = $this->api()->read('items', $instance['image_id'])->getContent();
-}
-$sourceText = [];
-if ($source) {
-    $sourceText[] = ucfirst($instance['source_type']);
-    $sourceText[] = $source->link($source->displayTitle());
-} else {
-    $sourceText[] = '[no source]';
-}
-?>
+    <?php
+    $source = null;
+    if ($instance['source_id']) {
+        $source = $this->api()->read('items', $instance['source_id'])->getContent();
+    }
+    $image = null;
+    if ($instance['image_id']) {
+        $image = $this->api()->read('items', $instance['image_id'])->getContent();
+    }
+    if ($instance['page_count']) {
+        $pageCount = $instance['page_count'];
+    } elseif ($image) {
+        $pageCount = count($image->media());
+    } else {
+        $pageCount = 0;
+    }
+    ?>
     <tr>
-        <td><?php echo $this->hyperlink(
-            '[open in viewer]',
+        <td><?php echo sprintf('%s (%s pages)', $this->hyperlink(
+            '[view instance]',
             $this->url('admin/pwd/viewer',['document-instance-id' => $instance['id']])
-        ) ?></td>
-        <td><?php echo implode(': ', $sourceText); ?></td>
+        ), $pageCount); ?></td>
+        <td><?php echo $source
+            ? sprintf('%s: %s', ucfirst($instance['source_type']), $source->link($source->displayTitle()))
+            : '[no source]';
+        ?></td>
         <td><?php echo $instance['location']; ?></td>
-        <td><?php echo $image ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($image->media())) : '[no image]'; ?></td>
+        <td><?php echo $image
+            ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($image->media()))
+            : '[no image]';
+        ?></td>
     </tr>
 <?php endforeach; ?>
 </tbody>

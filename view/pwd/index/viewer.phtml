@@ -8,9 +8,9 @@ $media = $image->media();
     <li><b>Source: </b><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></li>
     <li><b>Location: </b><?php echo $documentImage['location']; ?></li>
 <!--
-    <li><b>Is primary: </b><?php echo $documentImage['is_primary']; ?></li>
-    <li><b>Page number: </b><?php echo $documentImage['page_number']; ?></li>
-    <li><b>Page count: </b><?php echo $documentImage['page_count']; ?></li>
+    <li><b>Is primary: </b><?php echo $instance['is_primary']; ?></li>
+    <li><b>Page number: </b><?php echo $instance['page_number']; ?></li>
+    <li><b>Page count: </b><?php echo $instance['page_count']; ?></li>
 -->
 </ul>
 <?php if ($media): ?>

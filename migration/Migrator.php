@@ -33,11 +33,11 @@ class Migrator
     protected $omekaPath;
 
     /**
-     * Cache of PWD reification table data.
+     * Cache of PWD instance table data (name, collection, microfilm, publication)
      *
      * @var array
      */
-    protected $reificationData = [];
+    protected $instanceData = [];
 
     /**
      * Cache of PWD/Omeka identifier mappings
@@ -486,10 +486,10 @@ class Migrator
             transcription MEDIUMTEXT COLLATE utf8mb4_unicode_ci
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
-        // Create documents/names reification table.
-        $conn->exec('DROP TABLE IF EXISTS pwd_document_name');
+        // Create name instance table.
+        $conn->exec('DROP TABLE IF EXISTS pwd_name_instance');
         $conn->exec('
-        CREATE TABLE pwd_document_name (
+        CREATE TABLE pwd_name_instance (
             id int(11) NOT NULL AUTO_INCREMENT,
             document_id int(11) NOT NULL,
             name_id int(11) DEFAULT NULL,
@@ -501,10 +501,10 @@ class Migrator
             PRIMARY KEY (id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
-        // Create document/image reification table.
-        $conn->exec("DROP TABLE IF EXISTS pwd_document_image");
+        // Create document instance table.
+        $conn->exec("DROP TABLE IF EXISTS pwd_document_instance");
         $conn->exec('
-        CREATE TABLE pwd_document_image (
+        CREATE TABLE pwd_document_instance (
             id int(11) NOT NULL AUTO_INCREMENT,
             document_id int(11) NOT NULL,
             image_id int(11) DEFAULT NULL,
@@ -602,9 +602,9 @@ class Migrator
      */
     public function prepareCache()
     {
-        // Cache document/name reification data.
+        // Cache name instance data.
         foreach ($this->getPwdTable('documents_names') as $row) {
-            $this->reificationData['documents_names'][$row['documentID']][] = [
+            $this->instanceData['documents_names'][$row['documentID']][] = [
                 'nameID' => $row['nameID'],
                 'author' => $row['author'],
                 'recipient' => $row['recipient'],
@@ -614,10 +614,10 @@ class Migrator
             ];
         }
 
-        // Cache document/image refication data.
+        // Cache document instance data.
         foreach (['collection', 'microfilm', 'publication'] as $table) {
             foreach ($this->getPwdTable("documents_{$table}s") as $row) {
-                $this->reificationData["documents_{$table}s"][$row['documentID']][] = [
+                $this->instanceData["documents_{$table}s"][$row['documentID']][] = [
                     "{$table}ID" => $row["{$table}ID"],
                     'imageID' => $row['imageID'],
                     'imagePageNumber' => $row['imagePageNumber'],
@@ -1061,7 +1061,7 @@ class Migrator
             }
 
             // Map names. Note that we don't map names that don't exist.
-            $names = $this->reificationData['documents_names'][$row['documentID']] ?? [];
+            $names = $this->instanceData['documents_names'][$row['documentID']] ?? [];
             foreach ($names as $value) {
                 $oNameId = $this->mappings['pwd_names'][$value['nameID']] ?? null;
                 if ($oNameId) {
@@ -1081,7 +1081,7 @@ class Migrator
             ];
             $resourcesToMap = [];
             foreach ($resourceVars as $resourceVar) {
-                $resources = $this->reificationData[$resourceVar[0]][$row['documentID']] ?? [];
+                $resources = $this->instanceData[$resourceVar[0]][$row['documentID']] ?? [];
                 foreach ($resources as $value) {
                     $oId = $this->mappings[$resourceVar[1]][$value[$resourceVar[2]]] ?? null;
                     if ($oId) {
@@ -1134,16 +1134,16 @@ class Migrator
     }
 
     /**
-     * Map document/name and document/image reification data.
+     * Map name and document instance data.
      */
-    public function mapReificationData()
+    public function mapInstanceData()
     {
         $conn = $this->services->get('Omeka\Connection');
 
-        // Map documents/names reification table.
+        // Map name instance table.
         $tokenCount = 0;
         $insertValues = [];
-        foreach ($this->reificationData['documents_names'] as $key => $values) {
+        foreach ($this->instanceData['documents_names'] as $key => $values) {
             foreach ($values as $value) {
                 $insertValues[] = $this->mappings['pwd_documents'][$key];
                 $insertValues[] = $this->mappings['pwd_names'][$value['nameID']] ?? null;
@@ -1156,7 +1156,7 @@ class Migrator
             }
         }
         $sql = sprintf(
-            'INSERT INTO pwd_document_name (
+            'INSERT INTO pwd_name_instance (
                 document_id, name_id, is_author, is_recipient, is_primary, location, notes
             ) VALUES %s',
             implode(', ', array_fill(0, $tokenCount, '(?, ?, ?, ?, ?, ?, ?)'))
@@ -1164,13 +1164,13 @@ class Migrator
         $stmt = $conn->prepare($sql);
         $stmt->execute($insertValues);
 
-        // Map document/image reification tables.
+        // Map document instance tables.
         foreach (['collection', 'microfilm', 'publication'] as $table) {
             $tokenCount = 0;
             $insertValues = [];
-            foreach ($this->reificationData["documents_{$table}s"] as $key => $values) {
+            foreach ($this->instanceData["documents_{$table}s"] as $key => $values) {
                 if (!isset($this->mappings['pwd_documents'][$key])) {
-                    // Documents listed in reification tables may not exist.
+                    // Documents listed in instance tables may not exist.
                     continue;
                 }
                 foreach ($values as $value) {
@@ -1186,7 +1186,7 @@ class Migrator
                 }
             }
             $sql = sprintf(
-                "INSERT INTO pwd_document_image (
+                "INSERT INTO pwd_document_instance (
                     document_id, image_id, source_id, source_type, location, is_primary, page_number, page_count
                 ) VALUES %s",
                 implode(', ', array_fill(0, $tokenCount, '(?, ?, ?, ?, ?, ?, ?, ?)'))

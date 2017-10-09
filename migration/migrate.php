@@ -23,7 +23,7 @@ echo "Migrating publications..."; $migrator->migratePublications(); done();
 echo "Migrating names..."; $migrator->migrateNames(); done();
 echo "Migrating images..."; $migrator->migrateImages(); done();
 echo "Migrating documents..."; $migrator->migrateDocuments(); done();
-echo "Mapping reification data..."; $migrator->mapReificationData(); done();
+echo "Mapping instance data..."; $migrator->mapInstanceData(); done();
 
 echo "------------------------------\n";
 printf("Execution ended: %s\n", date('c'));

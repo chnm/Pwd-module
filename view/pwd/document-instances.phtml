@@ -1,4 +1,4 @@
-<div id="pwd-document-images" class="section">
+<div id="pwd-document-instances" class="section">
 <table class="tablesaw" data-tablesaw-mode="stack">
 <thead>
     <tr>
@@ -8,19 +8,19 @@
     </tr>
 </thead>
 <tbody>
-<?php foreach ($documentImages as $docImage): ?>
+<?php foreach ($documentInstances as $instance): ?>
 <?php
 $source = null;
-if ($docImage['source_id']) {
-    $source = $this->api()->read('items', $docImage['source_id'])->getContent();
+if ($instance['source_id']) {
+    $source = $this->api()->read('items', $instance['source_id'])->getContent();
 }
 $image = null;
-if ($docImage['image_id']) {
-    $image = $this->api()->read('items', $docImage['image_id'])->getContent();
+if ($instance['image_id']) {
+    $image = $this->api()->read('items', $instance['image_id'])->getContent();
 }
 $sourceText = [];
 if ($source) {
-    $sourceText[] = ucfirst($docImage['source_type']);
+    $sourceText[] = ucfirst($instance['source_type']);
     $sourceText[] = $source->link($source->displayTitle());
 } else {
     $sourceText[] = '[no source]';
@@ -33,8 +33,8 @@ if ($image) {
             '[open in viewer]',
             $this->url(
                 'admin/pwd/viewer',
-                ['document-image-id' => $docImage['id']],
-                ['fragment' => $docImage['page_number'] ? sprintf('page%s', $docImage['page_number']) : null]
+                ['document-image-id' => $instance['id']],
+                ['fragment' => $instance['page_number'] ? sprintf('page%s', $instance['page_number']) : null]
             )
         );
     } else {
@@ -47,7 +47,7 @@ if ($image) {
     <tr>
         <td><?php echo implode(' : ', $imageText); ?></td>
         <td><?php echo implode(' : ', $sourceText); ?></td>
-        <td><?php echo $docImage['location']; ?></td>
+        <td><?php echo $instance['location']; ?></td>
     </tr>
 <?php endforeach; ?>
 </tbody>

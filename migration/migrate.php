@@ -24,6 +24,7 @@ echo "Migrating names..."; $migrator->migrateNames(); done();
 echo "Migrating images..."; $migrator->migrateImages(); done();
 echo "Migrating documents..."; $migrator->migrateDocuments(); done();
 echo "Mapping instance data..."; $migrator->mapInstanceData(); done();
+echo "Inserting ingested media..."; $migrator->insertIngestedMedia();; done();
 
 echo "------------------------------\n";
 printf("Execution ended: %s\n", date('c'));

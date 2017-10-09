@@ -33,7 +33,7 @@ if ($image) {
             '[open in viewer]',
             $this->url(
                 'admin/pwd/viewer',
-                ['document-image-id' => $instance['id']],
+                ['document-instance-id' => $instance['id']],
                 ['fragment' => $instance['page_number'] ? sprintf('page%s', $instance['page_number']) : null]
             )
         );

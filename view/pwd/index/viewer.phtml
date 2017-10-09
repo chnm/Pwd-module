@@ -1,23 +1,20 @@
-<?php
-echo $this->pageTitle($document->displayTitle(), 1, 'PWD Document Viewer');
-$media = $image->media();
-?>
+<?php echo $this->pageTitle($document->displayTitle(), 1, 'PWD Document Viewer'); ?>
 <ul>
     <li><b>Document: </b><?php echo $document ? $document->link($document->displayTitle()) : '[no document]'; ?></li>
     <li><b><?php echo ucfirst($instance['source_type']); ?>: </b><?php echo $source ? $source->link($source->displayTitle()) : '[no source]'; ?></li>
     <li><b><?php echo ucfirst($instance['source_type']); ?> location: </b><?php echo $instance['location']; ?></li>
-    <li><b>Image: </b><?php echo $image ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($media)) : '[no image]'; ?></li>
-    <li><b>Image page number: </b><?php echo $instance['page_number']; ?></li>
-    <li><b>Image page count: </b><?php echo $instance['page_count']; ?></li>
+    <li><b>Image: </b><?php echo $image ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($pages)) : '[no image]'; ?></li>
+    <li><b>Page number: </b><?php echo $instance['page_number']; ?></li>
+    <li><b>Page count: </b><?php echo $instance['page_count']; ?></li>
 </ul>
-<?php if ($media): ?>
+<?php if ($pages): ?>
 <?php
-$media = array_slice(
-    $media,
+$pages = array_slice(
+    $pages,
     $instance['page_number'] ? $instance['page_number'] - 1 : 0,
-    $instance['page_count'] ? $instance['page_count'] : count($media)
+    $instance['page_count'] ? $instance['page_count'] : count($pages)
 );
-foreach ($media as $index => $page):
+foreach ($pages as $index => $page):
 ?>
 <h4><?php printf('Document page %s', $index + 1); ?></h4>
 <?php echo $page->render(); ?>

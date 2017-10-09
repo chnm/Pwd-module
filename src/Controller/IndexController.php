@@ -19,13 +19,21 @@ class IndexController extends AbstractActionController
         $stmt->execute([$this->params('document-instance-id')]);
         $instance = $stmt->fetch();
 
-        $image = $this->api()->read('items', $instance['image_id'])->getContent();
-        $document = $this->api()->read('items', $instance['document_id'])->getContent();
-        $source = $this->api()->read('items', $instance['source_id'])->getContent();
+        $image = $instance['image_id']
+            ? $this->api()->read('items', $instance['image_id'])->getContent()
+            : null;
+        $pages = $image ? $image->media() : null;
+        $document = $instance['document_id']
+            ? $this->api()->read('items', $instance['document_id'])->getContent()
+            : null;
+        $source = $instance['source_id']
+            ? $this->api()->read('items', $instance['source_id'])->getContent()
+            : null;
 
         $view = new ViewModel;
         $view->setVariable('instance', $instance);
         $view->setVariable('image', $image);
+        $view->setVariable('pages', $pages);
         $view->setVariable('document', $document);
         $view->setVariable('source', $source);
         return $view;

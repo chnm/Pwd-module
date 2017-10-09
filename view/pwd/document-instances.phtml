@@ -2,9 +2,10 @@
 <table class="tablesaw" data-tablesaw-mode="stack">
 <thead>
     <tr>
-        <th>Image</th>
-        <th>Source</th>
+        <th></th>
+        <th>In source</th>
         <th>Source location</th>
+        <th>In image</th>
     </tr>
 </thead>
 <tbody>
@@ -25,25 +26,15 @@ if ($source) {
 } else {
     $sourceText[] = '[no source]';
 }
-$imageText = [];
-if ($image) {
-    $imageText[] = $image->link($image->displayTitle());
-    if ($image->media()) {
-        $imageText[] = $this->hyperlink(
-            '[open in viewer]',
-            $this->url('admin/pwd/viewer',['document-instance-id' => $instance['id']])
-        );
-    } else {
-        $imageText[] = '[no pages]';
-    }
-} else {
-    $imageText[] = '[no image]';
-}
 ?>
     <tr>
-        <td><?php echo implode(' : ', $imageText); ?></td>
-        <td><?php echo implode(' : ', $sourceText); ?></td>
+        <td><?php echo $this->hyperlink(
+            '[open in viewer]',
+            $this->url('admin/pwd/viewer',['document-instance-id' => $instance['id']])
+        ) ?></td>
+        <td><?php echo implode(': ', $sourceText); ?></td>
         <td><?php echo $instance['location']; ?></td>
+        <td><?php echo $image ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($image->media())) : '[no image]'; ?></td>
     </tr>
 <?php endforeach; ?>
 </tbody>

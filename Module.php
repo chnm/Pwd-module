@@ -70,6 +70,7 @@ class Module extends AbstractModule
                 if ($this->isClass('pwd:Document', $item)) {
                     $sectionNav = $event->getParam('section_nav');
                     $sectionNav['pwd-document-instances'] = 'Document instances';
+                    $sectionNav['pwd-document-names'] = 'Document names';
                     $event->setParam('section_nav', $sectionNav);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
@@ -89,6 +90,9 @@ class Module extends AbstractModule
                 if ($this->isClass('pwd:Document', $item)) {
                     echo $view->partial('pwd/document-instances', [
                         'documentInstances' => $this->getDocumentInstances($item),
+                    ]);
+                    echo $view->partial('pwd/document-names', [
+                        'documentNames' => $this->getDocumentNames($item),
                     ]);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
@@ -128,7 +132,21 @@ class Module extends AbstractModule
     protected function getDocumentInstances(ItemRepresentation $item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
-        $stmt = $conn->prepare('SELECT * FROM pwd_document_instance WHERE document_id = ? ORDER BY is_primary');
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_instance WHERE document_id = ? ORDER BY is_primary DESC');
+        $stmt->execute([$item->id()]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Get all names of the passed pwd:Document item.
+     *
+     * @param ItemRepresentation $item
+     * @return array
+     */
+    protected function getDocumentNames(ItemRepresentation $item)
+    {
+        $conn = $this->getServiceLocator()->get('Omeka\Connection');
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_name WHERE document_id = ? ORDER BY is_author DESC, is_primary DESC');
         $stmt->execute([$item->id()]);
         return $stmt->fetchAll();
     }
@@ -142,7 +160,7 @@ class Module extends AbstractModule
     protected function getImageDocuments(ItemRepresentation $item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
-        $stmt = $conn->prepare('SELECT * FROM pwd_document_instance WHERE image_id = ? ORDER BY is_primary');
+        $stmt = $conn->prepare('SELECT * FROM pwd_document_instance WHERE image_id = ? ORDER BY is_primary DESC');
         $stmt->execute([$item->id()]);
         return $stmt->fetchAll();
     }

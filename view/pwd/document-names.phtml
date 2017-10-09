@@ -1,0 +1,28 @@
+<div id="pwd-document-names" class="section">
+<table class="tablesaw" data-tablesaw-mode="stack">
+<thead>
+    <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Location</th>
+        <th>Notes</th>
+    </tr>
+</thead>
+<tbody>
+<?php foreach ($documentNames as $docName): ?>
+    <?php
+    $name = null;
+    if ($docName['name_id']) {
+        $name = $this->api()->read('items', $docName['name_id'])->getContent();
+    }
+    ?>
+    <tr>
+        <td><?php echo $docName['is_author'] ? 'Author' : 'Recipient'; ?></td>
+        <td><?php echo $name ? $name->link($name->displayTitle()) : '[unknown]'; ?></td>
+        <td><?php echo $docName['location']; ?></td>
+        <td><?php echo $docName['notes']; ?></td>
+    </tr>
+<?php endforeach; ?>
+</tbody>
+</table>
+</div>

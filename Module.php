@@ -1,6 +1,7 @@
 <?php
 namespace Pwd;
 
+use Omeka\Api\Representation\ItemRepresentation;
 use Omeka\Module\AbstractModule;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
@@ -59,6 +60,7 @@ class Module extends AbstractModule
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)
     {
+        // Add section navigation to items.
         $sharedEventManager->attach(
             'Omeka\Controller\Admin\Item',
             'view.show.section_nav',
@@ -67,16 +69,17 @@ class Module extends AbstractModule
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
                     $sectionNav = $event->getParam('section_nav');
-                    $sectionNav['pwd-document-instances'] = 'Instances';
+                    $sectionNav['pwd-document-instances'] = 'Document instances';
                     $event->setParam('section_nav', $sectionNav);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
                     $sectionNav = $event->getParam('section_nav');
-                    $sectionNav['pwd-image-documents'] = 'Documents';
+                    $sectionNav['pwd-image-documents'] = 'Documents in image';
                     $event->setParam('section_nav', $sectionNav);
                 }
             }
         );
+        // Add section content to items.
         $sharedEventManager->attach(
             'Omeka\Controller\Admin\Item',
             'view.show.after',
@@ -99,8 +102,12 @@ class Module extends AbstractModule
 
     /**
      * Check whether the passed item is an instance of the passed class.
+     *
+     * @param string $className
+     * @param ItemRepresentation $item
+     * @return bool
      */
-    protected function isClass($className, $item)
+    protected function isClass($className, ItemRepresentation $item)
     {
         $class = $item->resourceClass();
         if (!$class) {
@@ -114,8 +121,11 @@ class Module extends AbstractModule
 
     /**
      * Get all instances (copies, citations, etc.) of the passed pwd:Document item.
+     *
+     * @param ItemRepresentation $item
+     * @return array
      */
-    protected function getDocumentInstances($item)
+    protected function getDocumentInstances(ItemRepresentation $item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
         $stmt = $conn->prepare('SELECT * FROM pwd_document_instance WHERE document_id = ? ORDER BY is_primary');
@@ -125,8 +135,11 @@ class Module extends AbstractModule
 
     /**
      * Get all pwd:Document items represented in the passed pwd:Image item.
+     *
+     * @param ItemRepresentation $item
+     * @return array
      */
-    protected function getImageDocuments($item)
+    protected function getImageDocuments(ItemRepresentation $item)
     {
         $conn = $this->getServiceLocator()->get('Omeka\Connection');
         $stmt = $conn->prepare('SELECT * FROM pwd_document_instance WHERE image_id = ? ORDER BY is_primary');

@@ -31,11 +31,7 @@ if ($image) {
     if ($image->media()) {
         $imageText[] = $this->hyperlink(
             '[open in viewer]',
-            $this->url(
-                'admin/pwd/viewer',
-                ['document-instance-id' => $instance['id']],
-                ['fragment' => $instance['page_number'] ? sprintf('page%s', $instance['page_number']) : null]
-            )
+            $this->url('admin/pwd/viewer',['document-instance-id' => $instance['id']])
         );
     } else {
         $imageText[] = '[no pages]';

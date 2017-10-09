@@ -442,14 +442,10 @@ class Migrator
      */
     public function prepareFilesystem()
     {
-        // Delete all originals and derivatives from the files directory.
-        foreach (['original', 'large', 'medium', 'square'] as $dir) {
-            $files = glob(sprintf('%s/files/%s/*', $this->omekaPath, $dir));
-            foreach ($files as $file) {
-                if (is_file($file)) {
-                    unlink($file);
-                }
-            }
+        $filesPath = sprintf('%s/files', $this->omekaPath);
+        $filesBackupPath = sprintf('%s/files_backup', $this->omekaPath);
+        if (!file_exists($filesBackupPath)) {
+            rename($filesPath, $filesBackupPath);
         }
     }
 

@@ -198,19 +198,6 @@ class Migrator
         [
             'strategy' => 'file',
             'options' => [
-                'file' => __DIR__ . '/vocabs/time.rdf',
-                'format' => 'rdfxml',
-            ],
-            'vocab' => [
-                'o:namespace_uri' => 'http://www.w3.org/2006/time#',
-                'o:prefix' => 't',
-                'o:label' => 'Time Ontology',
-                'o:comment' =>  'A vocabulary for defining temporal entities such as time intervals, their properties and relationships.',
-            ],
-        ],
-        [
-            'strategy' => 'file',
-            'options' => [
                 'file' => __DIR__ . '/vocabs/pwd.n3',
                 'format' => 'turtle',
             ],
@@ -342,6 +329,8 @@ class Migrator
                 'pwd:microfilm' => [null, null, 'resource', false],
                 'pwd:publication' => [null, null, 'resource', false],
                 'pwd:image' => [null, null, 'resource', false],
+                'pwd:sentFromLocation' => [null, null, 'literal', false],
+                'pwd:sentToLocation' => [null, null, 'literal', false],
                 'pwd:note' => [null, null, 'literal', false],
                 'pwd:contentNote' => [null, null, 'literal', false],
                 'pwd:createdNote' => [null, null, 'literal', false],
@@ -354,9 +343,9 @@ class Migrator
                 'pwd:notableIdeaIssue' => [null, null, 'literal', false],
                 'pwd:notablePhrase' => [null, null, 'literal', false],
                 'pwd:documentNumber' => [null, null, 'literal', false],
-                't:year' => ['year created', null, 'literal', false],
-                't:month' => ['month created', null, 'literal', false],
-                't:day' => ['day created', null, 'literal', false],
+                'pwd:createdYear' => [null, null, 'literal', false],
+                'pwd:createdMonth' => [null, null, 'literal', false],
+                'pwd:createdDay' => [null, null, 'literal', false],
                 'bibo:pageStart' => [null, null, 'literal', false],
                 'bibo:numPages' => [null, null, 'literal', false],
             ],
@@ -1018,9 +1007,9 @@ class Migrator
                 [$row['documentNumber'], 'pwd:documentNumber', 'literal'],
                 [$row['documentImagePageNumber'], 'bibo:pageStart', 'literal'],
                 [$row['documentDate'], 'dcterms:created', 'literal'],
-                [$row['documentDateYear'], 't:year', 'literal'],
-                [$row['documentDateMonth'], 't:month', 'literal'],
-                [$row['documentDateDay'], 't:day', 'literal'],
+                [$row['documentDateYear'], 'pwd:createdYear', 'literal'],
+                [$row['documentDateMonth'], 'pwd:createdMonth', 'literal'],
+                [$row['documentDateDay'], 'pwd:createdDay', 'literal'],
                 [$row['documentDateNotes'], 'pwd:createdNote', 'literal'],
                 [$row['documentTitle'], 'dcterms:title', 'literal'],
                 [$row['documentNotes'], 'pwd:note', 'literal'],
@@ -1056,8 +1045,11 @@ class Migrator
                 $mapping[] = [$value, 'pwd:notablePhrase', 'literal'];
             }
 
-            // Map names. Note that we don't map names that don't exist.
+            // Map names. Note that we don't map names that don't exist and that
+            // we don't map locations more than once.
             $names = $this->tableCache['documents_names'][$row['documentID']] ?? [];
+            $sentFromLocationsToMap = [];
+            $sentToLocationsToMap = [];
             foreach ($names as $value) {
                 $oNameId = $this->mappings['pwd_names'][$value['nameID']] ?? null;
                 if ($oNameId) {
@@ -1066,7 +1058,21 @@ class Migrator
                         : ($value['primaryName'] ? 'bibo:recipient' : 'pwd:secondaryRecipient');
                     $mapping[] = [$oNameId, $term, 'resource'];
                 }
+                if ($value['nameLocation']) {
+                    if ($value['author']) {
+                        $sentFromLocationsToMap[$value['nameLocation']] = 'pwd:sentFromLocation';
+                    } else {
+                        $sentToLocationsToMap[$value['nameLocation']] = 'pwd:sentToLocation';
+                    }
+                }
             }
+            foreach ($sentFromLocationsToMap as $key => $value) {
+                $mapping[] = [$key, $value, 'literal'];
+            }
+            foreach ($sentToLocationsToMap as $key => $value) {
+                $mapping[] = [$key, $value, 'literal'];
+            }
+
             // Map resources (documents, microfilms, publications, and images).
             // Note that we don't map resources that don't exist and that we
             // don't map an individual resource more than once.

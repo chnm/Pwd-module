@@ -6,6 +6,7 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix time: <http://www.w3.org/2006/time#> .
 
 #
 # Properties
@@ -53,6 +54,29 @@
 :middleName a rdf:Property ;
     rdfs:label "middle name"@en ;
     rdfs:comment "A middle name."@en .
+
+:sentFromLocation a rdf:Property ;
+    rdfs:label "sent from location"@en ;
+    rdfs:comment "The location from where the document was sent."@en .
+
+:sentToLocation a rdf:Property ;
+    rdfs:label "sent to location"@en ;
+    rdfs:comment "The location to which the document was sent."@en .
+
+:createdYear a rdf:Property ;
+    rdfs:label "year created"@en ;
+    rdfs:comment "The year a document was created."@en ;
+    rdfs:subPropertyOf time:year .
+
+:createdMonth a rdf:Property ;
+    rdfs:label "month created"@en ;
+    rdfs:comment "The month a document was created."@en ;
+    rdfs:subPropertyOf time:month .
+
+:createdDay a rdf:Property ;
+    rdfs:label "day created"@en ;
+    rdfs:comment "The day a document was created."@en ;
+    rdfs:subPropertyOf time:day .
 
 :note a rdf:Property ;
     rdfs:label "note"@en ;

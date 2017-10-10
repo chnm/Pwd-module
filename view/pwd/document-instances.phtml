@@ -3,9 +3,9 @@
 <thead>
     <tr>
         <th></th>
+        <th>In image</th>
         <th>In source</th>
         <th>Location in source</th>
-        <th>In image</th>
     </tr>
 </thead>
 <tbody>
@@ -29,18 +29,18 @@
     ?>
     <tr>
         <td><?php echo sprintf('%s (%s pages)', $this->hyperlink(
-            '[view instance]',
+            '[view document]',
             $this->url('admin/pwd/viewer',['document-instance-id' => $instance['id']])
         ), $pageCount); ?></td>
-        <td><?php echo $source
-            ? sprintf('%s: %s', ucfirst($instance['source_type']), $source->link($source->displayTitle()))
-            : '[no source]';
-        ?></td>
-        <td><?php echo $instance['location']; ?></td>
         <td><?php echo $image
             ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($image->media()))
             : '[no image]';
         ?></td>
+        <td><?php echo $source
+            ? sprintf('%s: %s', ucfirst($instance['source_type']), $source->link($source->displayTitle()))
+            : '[no source]';
+        ?></td>
+        <td><?php echo $instance['location'] ? $instance['location'] : '[unknown]'; ?></td>
     </tr>
 <?php endforeach; ?>
 </tbody>

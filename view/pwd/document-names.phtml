@@ -19,8 +19,8 @@
     <tr>
         <td><?php echo $docName['is_author'] ? 'Author' : 'Recipient'; ?></td>
         <td><?php echo $name ? $name->link($name->displayTitle()) : '[unknown]'; ?></td>
-        <td><?php echo $docName['location']; ?></td>
-        <td><?php echo $docName['notes']; ?></td>
+        <td><?php echo $docName['location'] ? $docName['location'] : '[unknown]'; ?></td>
+        <td><?php echo $docName['notes'] ? $docName['notes'] : '[n/a]'; ?></td>
     </tr>
 <?php endforeach; ?>
 </tbody>

@@ -458,7 +458,8 @@ class Migrator
             $conn->exec("
             CREATE TABLE $table (
                 id_pwd int(11) NOT NULL,
-                id_omeka int(11) NOT NULL
+                id_omeka int(11) DEFAULT NULL,
+                FOREIGN KEY (id_omeka) REFERENCES item(id) ON DELETE SET NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         }
 
@@ -466,24 +467,27 @@ class Migrator
         $conn->exec('DROP TABLE IF EXISTS pwd_transcriptions');
         $conn->exec('
         CREATE TABLE pwd_transcriptions (
-            id_omeka int(11) NOT NULL,
+            id_omeka int(11) DEFAULT NULL,
             nominate tinyint(1) DEFAULT NULL,
-            transcription MEDIUMTEXT COLLATE utf8mb4_unicode_ci
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+            transcription MEDIUMTEXT COLLATE utf8mb4_unicode_ci,
+            FOREIGN KEY (id_omeka) REFERENCES item(id) ON DELETE SET NULL
+         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
         // Create name instance table.
         $conn->exec('DROP TABLE IF EXISTS pwd_document_name');
         $conn->exec('
         CREATE TABLE pwd_document_name (
             id int(11) NOT NULL AUTO_INCREMENT,
-            document_id int(11) NOT NULL,
+            document_id int(11) DEFAULT NULL,
             name_id int(11) DEFAULT NULL,
             is_author tinyint(1) DEFAULT NULL,
             is_recipient tinyint(1) DEFAULT NULL,
             is_primary tinyint(1) DEFAULT NULL,
             location TEXT COLLATE utf8mb4_unicode_ci,
             notes TEXT COLLATE utf8mb4_unicode_ci,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            FOREIGN KEY (document_id) REFERENCES item(id) ON DELETE SET NULL,
+            FOREIGN KEY (name_id) REFERENCES item(id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 
         // Create document instance table.
@@ -491,7 +495,7 @@ class Migrator
         $conn->exec('
         CREATE TABLE pwd_document_instance (
             id int(11) NOT NULL AUTO_INCREMENT,
-            document_id int(11) NOT NULL,
+            document_id int(11) DEFAULT NULL,
             image_id int(11) DEFAULT NULL,
             source_id int(11) DEFAULT NULL,
             source_type ENUM ("collection", "microfilm", "publication") NOT NULL,
@@ -499,7 +503,10 @@ class Migrator
             is_primary tinyint(1) DEFAULT NULL,
             page_number int(11) DEFAULT NULL,
             page_count int(11) DEFAULT NULL,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            FOREIGN KEY (document_id) REFERENCES item(id) ON DELETE SET NULL,
+            FOREIGN KEY (image_id) REFERENCES item(id) ON DELETE SET NULL,
+            FOREIGN KEY (source_id) REFERENCES item(id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
     }
 

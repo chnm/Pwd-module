@@ -185,19 +185,6 @@ class Migrator
         [
             'strategy' => 'file',
             'options' => [
-                'file' => __DIR__ . '/vocabs/bio.rdf',
-                'format' => 'rdfxml',
-            ],
-            'vocab' => [
-                'o:namespace_uri' => 'http://purl.org/vocab/bio/0.1/',
-                'o:prefix' => 'bio',
-                'o:label' => 'BIO',
-                'o:comment' =>  'A vocabulary for describing biographical information about people, both living and dead.',
-            ],
-        ],
-        [
-            'strategy' => 'file',
-            'options' => [
                 'file' => __DIR__ . '/vocabs/pwd.n3',
                 'format' => 'turtle',
             ],

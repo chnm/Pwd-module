@@ -307,7 +307,9 @@ class Migrator
                 'dcterms:title' => [null, null, 'literal', false],
                 'dcterms:description' => [null, null, 'literal', false],
                 'bibo:shortDescription' => ['short description', null, 'literal', false],
-                'dcterms:created' => [null, null, 'literal', false],
+                'pwd:createdYear' => [null, null, 'literal', false],
+                'pwd:createdMonth' => [null, null, 'literal', false],
+                'pwd:createdDay' => [null, null, 'literal', false],
                 'dcterms:creator' => ['author', null, 'resource', false],
                 'pwd:secondaryAuthor' => [null, null, 'literal', false],
                 'pwd:sentFromLocation' => [null, null, 'literal', false],
@@ -330,9 +332,6 @@ class Migrator
                 'pwd:notableIdeaIssue' => [null, null, 'literal', false],
                 'pwd:notablePhrase' => [null, null, 'literal', false],
                 'pwd:documentNumber' => [null, null, 'literal', false],
-                'pwd:createdYear' => [null, null, 'literal', false],
-                'pwd:createdMonth' => [null, null, 'literal', false],
-                'pwd:createdDay' => [null, null, 'literal', false],
                 'bibo:pageStart' => [null, null, 'literal', false],
                 'bibo:numPages' => [null, null, 'literal', false],
             ],
@@ -1000,10 +999,6 @@ class Migrator
             $mapping = [
                 [$row['documentNumber'], 'pwd:documentNumber', 'literal'],
                 [$row['documentImagePageNumber'], 'bibo:pageStart', 'literal'],
-                [$row['documentDate'], 'dcterms:created', 'literal'],
-                [$row['documentDateYear'], 'pwd:createdYear', 'literal'],
-                [$row['documentDateMonth'], 'pwd:createdMonth', 'literal'],
-                [$row['documentDateDay'], 'pwd:createdDay', 'literal'],
                 [$row['documentDateNotes'], 'pwd:createdNote', 'literal'],
                 [$row['documentTitle'], 'dcterms:title', 'literal'],
                 [$row['documentNotes'], 'pwd:note', 'literal'],
@@ -1014,6 +1009,20 @@ class Migrator
                 [$row['documentOtherAuthors'], 'pwd:authorNote', 'literal'],
                 [$row['documentOtherRecipients'], 'pwd:recipientNote', 'literal']
             ];
+
+            // Note the omission of the legacy "documentDate" in favor of the
+            // separate (and more accurate) dates below. "9999" and "99" were
+            // used as placeholders for an unknown year, month, or day. Here an
+            // omitted property implies an unknown date.
+            if ('9999' !== $row['documentDateYear']) {
+                $mapping[] = [$row['documentDateYear'], 'pwd:createdYear', 'literal'];
+            }
+            if ('99' !== $row['documentDateMonth']) {
+                $mapping[] = [$row['documentDateMonth'], 'pwd:createdMonth', 'literal'];
+            }
+            if ('99' !== $row['documentDateDay']) {
+                $mapping[] = [$row['documentDateDay'], 'pwd:createdDay', 'literal'];
+            }
 
             // Do not migrate citeCodeID #1 ("Document in hand or verified in a
             // collection, not a cited document").

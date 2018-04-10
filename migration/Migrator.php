@@ -454,7 +454,6 @@ class Migrator
         $conn->exec('
         CREATE TABLE pwd_transcriptions (
             id_omeka int(11) DEFAULT NULL,
-            nominate tinyint(1) DEFAULT NULL,
             transcription MEDIUMTEXT COLLATE utf8mb4_unicode_ci,
             FOREIGN KEY (id_omeka) REFERENCES item(id) ON DELETE SET NULL
          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
@@ -982,7 +981,7 @@ class Migrator
         }
 
         $documents = [];
-        $transcriptionData = [];
+        $transcriptions = [];
         foreach ($this->getPwdTable('documents') as $index => $row) {
             $data = [
                 'o:item_set' => [
@@ -1103,10 +1102,7 @@ class Migrator
             }
 
             $documents[$row['documentID']] = $this->addValues($data, $mapping);
-            $transcriptionData[$row['documentID']] = [
-                $row['documentNominateForTranscription'],
-                $row['documentTranscription'],
-            ];
+            $transcriptions[$row['documentID']] = $row['documentTranscription'];
         }
 
         $api = $this->services->get('Omeka\ApiManager');
@@ -1119,22 +1115,21 @@ class Migrator
             $tokenCount = 0;
             $insertValues = [];
             foreach ($response->getContent() as $key => $value) {
-                if (null === $transcriptionData[$key][0] && !$transcriptionData[$key][1]) {
-                    // No transcription data to save.
-                    continue;
+                if ($transcriptions[$key]) {
+                    $insertValues[] = $value->id();
+                    $insertValues[] = utf8_encode($transcriptions[$key]);
+                    $tokenCount++;
                 }
-                $insertValues[] = $value->id();
-                $insertValues[] = $transcriptionData[$key][0];
-                $insertValues[] = utf8_encode($transcriptionData[$key][1]);
-                $tokenCount++;
             }
-            $sql = sprintf(
-                'INSERT INTO pwd_transcriptions (id_omeka, nominate, transcription) VALUES %s',
-                implode(', ', array_fill(0, $tokenCount, '(?, ?, ?)'))
-            );
-            $conn = $this->services->get('Omeka\Connection');
-            $stmt = $conn->prepare($sql);
-            $stmt->execute($insertValues);
+            if ($tokenCount) {
+                $sql = sprintf(
+                    'INSERT INTO pwd_transcriptions (id_omeka, transcription) VALUES %s',
+                    implode(', ', array_fill(0, $tokenCount, '(?, ?)'))
+                );
+                $conn = $this->services->get('Omeka\Connection');
+                $stmt = $conn->prepare($sql);
+                $stmt->execute($insertValues);
+            }
         }
     }
 

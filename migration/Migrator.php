@@ -948,9 +948,9 @@ class Migrator
 
             $sql = '
             INSERT INTO media (
-                id, item_id, source, storage_id, sha256, position, ingester, renderer, media_type, extension, has_original, has_thumbnails
+                id, item_id, source, storage_id, sha256, size, position, ingester, renderer, media_type, extension, has_original, has_thumbnails
             ) VALUES (
-                ?, ?, ?, ?, ?, ?, "sideload", "file", "image/jpeg", "jpg", 1, 1
+                ?, ?, ?, ?, ?, ?, ?, "sideload", "file", "image/jpeg", "jpg", 1, 1
             )';
             $insertValues = [
                 $conn->lastInsertId(),
@@ -958,6 +958,7 @@ class Migrator
                 $row['source'],
                 $row['storage_id'],
                 $row['sha256'],
+                $row['size'],
                 $row['position']
             ];
             $stmt = $conn->prepare($sql);

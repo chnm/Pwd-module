@@ -112,6 +112,16 @@ class Migrator
     protected $excludeImages = [4828, 18582, 10943, 19115, 18196, 18238, 19124, 18208, 18195, 18213];
 
     /**
+     * Modules that are required for migration.
+     *
+     * @var array
+     */
+    protected $moduleDependencies = [
+        'FileSideload', // required for "sideload" media ingester
+        'Scripto', // required for "Scripto" vocabulary
+    ];
+
+    /**
      * Tables to truncate during Omeka reversion
      *
      * @var array
@@ -195,6 +205,19 @@ class Migrator
                 'o:comment' =>  null,
             ],
         ],
+        [
+            'strategy' => 'file',
+            'options' => [
+                'file' => __DIR__ . '/../../Scripto/vocabs/scripto.n3',
+                'format' => 'turtle',
+            ],
+            'vocab' => [
+                'o:namespace_uri' => 'http://scripto.org/vocab#',
+                'o:prefix' => 'scripto',
+                'o:label' => 'Scripto',
+                'o:comment' =>  null,
+            ],
+        ]
     ];
 
     /**
@@ -399,7 +422,7 @@ class Migrator
 
         // Verify module dependencies.
         $modules = $this->services->get('Omeka\ModuleManager');
-        foreach (['FileSideload'] as $moduleName) {
+        foreach ($this->moduleDependencies as $moduleName) {
             $module = $modules->getModule($moduleName);
             if (!$module || 'active' !== $module->getState())  {
                 throw new Exception(sprintf('The %s module must be installed.', $moduleName));
@@ -1007,7 +1030,8 @@ class Migrator
                 [$row['documentShortGist'], 'bibo:shortDescription', 'literal'],
                 [$row['documentContentNotes'], 'pwd:contentNote', 'literal'],
                 [$row['documentOtherAuthors'], 'pwd:authorNote', 'literal'],
-                [$row['documentOtherRecipients'], 'pwd:recipientNote', 'literal']
+                [$row['documentOtherRecipients'], 'pwd:recipientNote', 'literal'],
+                [$row['documentTranscription'], 'scripto:transcription', 'literal'],
             ];
 
             // Note the omission of the legacy "documentDate" in favor of the

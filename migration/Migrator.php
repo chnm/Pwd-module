@@ -254,6 +254,10 @@ class Migrator
             ['Images', 'dcterms:title', 'literal'],
             ['War Department document images.', 'dcterms:description', 'literal'],
         ],
+        'untranscribed_documents' => [
+            ['Untranscribed Documents', 'dcterms:title', 'literal'],
+            ['War Department documents that have not been transcribed.', 'dcterms:description', 'literal'],
+        ],
     ];
 
     /**
@@ -1139,11 +1143,17 @@ class Migrator
             // Map and save document transcription data.
             $tokenCount = 0;
             $insertValues = [];
+            $untranscribedTokenCount = 0;
+            $untranscribedInsertValues = [];
             foreach ($response->getContent() as $key => $value) {
                 if ($transcriptions[$key]) {
                     $insertValues[] = $value->id();
                     $insertValues[] = utf8_encode($transcriptions[$key]);
                     $tokenCount++;
+                } else {
+                    $untranscribedInsertValues[] = $value->id();
+                    $untranscribedInsertValues[] = $this->itemSets['untranscribed_documents'];
+                    $untranscribedTokenCount++;
                 }
             }
             if ($tokenCount) {
@@ -1154,6 +1164,15 @@ class Migrator
                 $conn = $this->services->get('Omeka\Connection');
                 $stmt = $conn->prepare($sql);
                 $stmt->execute($insertValues);
+            }
+            if ($untranscribedTokenCount) {
+                $sql = sprintf(
+                    'INSERT INTO item_item_set (item_id, item_set_id) VALUES %s',
+                    implode(', ', array_fill(0, $untranscribedTokenCount, '(?, ?)'))
+                );
+                $conn = $this->services->get('Omeka\Connection');
+                $stmt = $conn->prepare($sql);
+                $stmt->execute($untranscribedInsertValues);
             }
         }
     }

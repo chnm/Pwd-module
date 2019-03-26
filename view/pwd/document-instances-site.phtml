@@ -30,7 +30,7 @@
     <tr>
         <td><?php echo sprintf('%s (%s pages)', $this->hyperlink(
             '[view document]',
-            $this->url('site/pwd/viewer',['document-instance-id' => $instance['id']])
+            $this->url('site/pwd/viewer',['document-instance-id' => $instance['id']], true)
         ), $pageCount); ?></td>
         <td><?php echo $image
             ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($image->media()))

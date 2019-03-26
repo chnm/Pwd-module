@@ -1,5 +1,5 @@
 <?php
-namespace Pwd\Controller;
+namespace Pwd\Controller\Admin;
 
 use Interop\Container\ContainerInterface;
 use Zend\ServiceManager\Factory\FactoryInterface;

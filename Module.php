@@ -18,7 +18,7 @@ class Module extends AbstractModule
             ],
             'controllers' => [
                 'factories' => [
-                    'Pwd\Controller\Index' => 'Pwd\Controller\IndexControllerFactory',
+                    'Pwd\Controller\Admin\Index' => 'Pwd\Controller\Admin\IndexControllerFactory',
                 ],
             ],
             'router' => [
@@ -30,7 +30,7 @@ class Module extends AbstractModule
                                 'options' => [
                                     'route' => '/pwd',
                                     'defaults' => [
-                                        '__NAMESPACE__' => 'Pwd\Controller',
+                                        '__NAMESPACE__' => 'Pwd\Controller\Admin',
                                         'controller' => 'Index',
                                         'action' => 'index',
                                     ],

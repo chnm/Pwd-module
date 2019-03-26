@@ -119,15 +119,15 @@ class Module extends AbstractModule
                 $view = $event->getTarget();
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
-                    echo $view->partial('pwd/document-instances', [
+                    echo $view->partial('pwd/document-instances-admin', [
                         'documentInstances' => $this->getDocumentInstances($item),
                     ]);
-                    echo $view->partial('pwd/document-names', [
+                    echo $view->partial('pwd/document-names-admin', [
                         'documentNames' => $this->getDocumentNames($item),
                     ]);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
-                    echo $view->partial('pwd/image-documents', [
+                    echo $view->partial('pwd/image-documents-admin', [
                         'imageDocuments' => $this->getImageDocuments($item),
                     ]);
                 }
@@ -140,18 +140,15 @@ class Module extends AbstractModule
                 $view = $event->getTarget();
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
-                    echo sprintf('<h3>%s</h3>', $view->translate('Document instances'));
-                    echo $view->partial('pwd/document-instances', [
+                    echo $view->partial('pwd/document-instances-site', [
                         'documentInstances' => $this->getDocumentInstances($item),
                     ]);
-                    echo sprintf('<h3>%s</h3>', $view->translate('Document names'));
-                    echo $view->partial('pwd/document-names', [
+                    echo $view->partial('pwd/document-names-site', [
                         'documentNames' => $this->getDocumentNames($item),
                     ]);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
-                    echo sprintf('<h3>%s</h3>', $view->translate('Documents in image'));
-                    echo $view->partial('pwd/image-documents', [
+                    echo $view->partial('pwd/image-documents-site', [
                         'imageDocuments' => $this->getImageDocuments($item),
                     ]);
                 }

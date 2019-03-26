@@ -133,6 +133,28 @@ class Module extends AbstractModule
                 }
             }
         );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Site\Item',
+            'view.show.after',
+            function (Event $event) {
+                var_dump('foobar');
+                $view = $event->getTarget();
+                $item = $view->item;
+                if ($this->isClass('pwd:Document', $item)) {
+                    echo $view->partial('pwd/document-instances', [
+                        'documentInstances' => $this->getDocumentInstances($item),
+                    ]);
+                    echo $view->partial('pwd/document-names', [
+                        'documentNames' => $this->getDocumentNames($item),
+                    ]);
+                }
+                if ($this->isClass('pwd:Image', $item)) {
+                    echo $view->partial('pwd/image-documents', [
+                        'imageDocuments' => $this->getImageDocuments($item),
+                    ]);
+                }
+            }
+        );
     }
 
     /**

@@ -1,0 +1,24 @@
+<?php echo $this->pageTitle($document->displayTitle(), 1, 'Document Viewer'); ?>
+<ul>
+    <li><b>Document: </b><?php echo $document ? $document->link($document->displayTitle()) : '[no document]'; ?></li>
+    <li><b>In image: </b><?php echo $image ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($pages)) : '[no image]'; ?></li>
+    <li><b>In source: </b><?php echo $source ? sprintf('%s: %s', ucfirst($instance['source_type']), $source->link($source->displayTitle())) : '[no source]'; ?></li>
+    <li><b>Location in source: </b><?php echo $instance['location'] ? $instance['location'] : '[unknown]'; ?></li>
+    <li><b>Page number: </b><?php echo $instance['page_number'] ? $instance['page_number'] : '[unknown]'; ?></li>
+    <li><b>Page count: </b><?php echo $instance['page_count'] ? $instance['page_count'] : '[unknown]'; ?></li>
+</ul>
+<?php if ($pages): ?>
+<?php
+$pages = array_slice(
+    $pages,
+    $instance['page_number'] ? $instance['page_number'] - 1 : 0,
+    $instance['page_count'] ? $instance['page_count'] : count($pages)
+);
+?>
+<?php foreach ($pages as $index => $page): ?>
+<h4><?php printf('Document page %s', $index + 1); ?></h4>
+<?php echo $page->render(); ?>
+<?php endforeach; ?>
+<?php else: ?>
+<p>This document has no page images.</p>
+<?php endif; ?>

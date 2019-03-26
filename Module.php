@@ -19,6 +19,7 @@ class Module extends AbstractModule
             'controllers' => [
                 'factories' => [
                     'Pwd\Controller\Admin\Index' => 'Pwd\Controller\Admin\IndexControllerFactory',
+                    'Pwd\Controller\Site\Index' => 'Pwd\Controller\Site\IndexControllerFactory',
                 ],
             ],
             'router' => [
@@ -31,6 +32,36 @@ class Module extends AbstractModule
                                     'route' => '/pwd',
                                     'defaults' => [
                                         '__NAMESPACE__' => 'Pwd\Controller\Admin',
+                                        'controller' => 'Index',
+                                        'action' => 'index',
+                                    ],
+                                ],
+                                'may_terminate' => true,
+                                'child_routes' => [
+                                    'viewer' => [
+                                        'type' => 'Segment',
+                                        'options' => [
+                                            'route' => '/viewer/:document-instance-id',
+                                            'constraints' => [
+                                                'document-instance-id' => '\d+',
+                                            ],
+                                            'defaults' => [
+                                                'action' => 'viewer',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'site' => [
+                        'child_routes' => [
+                            'pwd' => [
+                                'type' => 'Literal',
+                                'options' => [
+                                    'route' => '/pwd',
+                                    'defaults' => [
+                                        '__NAMESPACE__' => 'Pwd\Controller\Site',
                                         'controller' => 'Index',
                                         'action' => 'index',
                                     ],

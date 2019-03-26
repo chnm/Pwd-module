@@ -1,0 +1,47 @@
+<h3><?php echo $this->translate('Document instances'); ?></h3>
+<table class="tablesaw" data-tablesaw-mode="stack">
+<thead>
+    <tr>
+        <th></th>
+        <th>In image</th>
+        <th>In source</th>
+        <th>Location in source</th>
+    </tr>
+</thead>
+<tbody>
+<?php foreach ($documentInstances as $instance): ?>
+    <?php
+    $source = null;
+    if ($instance['source_id']) {
+        $source = $this->api()->read('items', $instance['source_id'])->getContent();
+    }
+    $image = null;
+    if ($instance['image_id']) {
+        $image = $this->api()->read('items', $instance['image_id'])->getContent();
+    }
+    if ($instance['page_count']) {
+        $pageCount = $instance['page_count'];
+    } elseif ($image) {
+        $pageCount = count($image->media());
+    } else {
+        $pageCount = 0;
+    }
+    ?>
+    <tr>
+        <td><?php echo sprintf('%s (%s pages)', $this->hyperlink(
+            '[view document]',
+            $this->url('site/pwd/viewer',['document-instance-id' => $instance['id']], true)
+        ), $pageCount); ?></td>
+        <td><?php echo $image
+            ? sprintf('%s (%s pages)', $image->link($image->displayTitle()), count($image->media()))
+            : '[no image]';
+        ?></td>
+        <td><?php echo $source
+            ? sprintf('%s: %s', ucfirst($instance['source_type']), $source->link($source->displayTitle()))
+            : '[no source]';
+        ?></td>
+        <td><?php echo $instance['location'] ? $instance['location'] : '[unknown]'; ?></td>
+    </tr>
+<?php endforeach; ?>
+</tbody>
+</table>

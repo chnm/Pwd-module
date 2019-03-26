@@ -1,0 +1,31 @@
+<h3><?php echo $this->translate('Documents in image'); ?></h3>
+<table class="tablesaw" data-tablesaw-mode="stack">
+<thead>
+    <tr>
+        <th>Has document</th>
+        <th>In source</th>
+        <th>Location in source</th>
+    </tr>
+</thead>
+<tbody>
+<?php foreach ($imageDocuments as $imageDoc): ?>
+<?php
+    $document = null;
+    if ($imageDoc['document_id']) {
+        $document = $this->api()->read('items', $imageDoc['document_id'])->getContent();
+    }
+    $source = null;
+    if ($imageDoc['source_id']) {
+        $source = $this->api()->read('items', $imageDoc['source_id'])->getContent();
+    }
+    ?>
+    <tr>
+        <td><?php echo $document ? $document->link($document->displayTitle()) : '[no document]'; ?></td>
+        <td><?php echo $source
+            ? sprintf('%s: %s', ucfirst($imageDoc['source_type']), $source->link($source->displayTitle()))
+            : '[no source]'; ?></td>
+        <td><?php echo $imageDoc['location'] ? $imageDoc['location'] : '[unknown]'; ?></td>
+    </tr>
+<?php endforeach; ?>
+</tbody>
+</table>

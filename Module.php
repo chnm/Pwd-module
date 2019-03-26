@@ -18,7 +18,8 @@ class Module extends AbstractModule
             ],
             'controllers' => [
                 'factories' => [
-                    'Pwd\Controller\Index' => 'Pwd\Controller\IndexControllerFactory',
+                    'Pwd\Controller\Admin\Index' => 'Pwd\Controller\Admin\IndexControllerFactory',
+                    'Pwd\Controller\Site\Index' => 'Pwd\Controller\Site\IndexControllerFactory',
                 ],
             ],
             'router' => [
@@ -30,7 +31,37 @@ class Module extends AbstractModule
                                 'options' => [
                                     'route' => '/pwd',
                                     'defaults' => [
-                                        '__NAMESPACE__' => 'Pwd\Controller',
+                                        '__NAMESPACE__' => 'Pwd\Controller\Admin',
+                                        'controller' => 'Index',
+                                        'action' => 'index',
+                                    ],
+                                ],
+                                'may_terminate' => true,
+                                'child_routes' => [
+                                    'viewer' => [
+                                        'type' => 'Segment',
+                                        'options' => [
+                                            'route' => '/viewer/:document-instance-id',
+                                            'constraints' => [
+                                                'document-instance-id' => '\d+',
+                                            ],
+                                            'defaults' => [
+                                                'action' => 'viewer',
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'site' => [
+                        'child_routes' => [
+                            'pwd' => [
+                                'type' => 'Literal',
+                                'options' => [
+                                    'route' => '/pwd',
+                                    'defaults' => [
+                                        '__NAMESPACE__' => 'Pwd\Controller\Site',
                                         'controller' => 'Index',
                                         'action' => 'index',
                                     ],
@@ -88,15 +119,36 @@ class Module extends AbstractModule
                 $view = $event->getTarget();
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
-                    echo $view->partial('pwd/document-instances', [
+                    echo $view->partial('pwd/document-instances-admin', [
                         'documentInstances' => $this->getDocumentInstances($item),
                     ]);
-                    echo $view->partial('pwd/document-names', [
+                    echo $view->partial('pwd/document-names-admin', [
                         'documentNames' => $this->getDocumentNames($item),
                     ]);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
-                    echo $view->partial('pwd/image-documents', [
+                    echo $view->partial('pwd/image-documents-admin', [
+                        'imageDocuments' => $this->getImageDocuments($item),
+                    ]);
+                }
+            }
+        );
+        $sharedEventManager->attach(
+            'Omeka\Controller\Site\Item',
+            'view.show.after',
+            function (Event $event) {
+                $view = $event->getTarget();
+                $item = $view->item;
+                if ($this->isClass('pwd:Document', $item)) {
+                    echo $view->partial('pwd/document-instances-site', [
+                        'documentInstances' => $this->getDocumentInstances($item),
+                    ]);
+                    echo $view->partial('pwd/document-names-site', [
+                        'documentNames' => $this->getDocumentNames($item),
+                    ]);
+                }
+                if ($this->isClass('pwd:Image', $item)) {
+                    echo $view->partial('pwd/image-documents-site', [
                         'imageDocuments' => $this->getImageDocuments($item),
                     ]);
                 }

@@ -137,18 +137,20 @@ class Module extends AbstractModule
             'Omeka\Controller\Site\Item',
             'view.show.after',
             function (Event $event) {
-                var_dump('foobar');
                 $view = $event->getTarget();
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
+                    echo sprintf('<h3>%s</h3>', $view->translate('Document instances'));
                     echo $view->partial('pwd/document-instances', [
                         'documentInstances' => $this->getDocumentInstances($item),
                     ]);
+                    echo sprintf('<h3>%s</h3>', $view->translate('Document names'));
                     echo $view->partial('pwd/document-names', [
                         'documentNames' => $this->getDocumentNames($item),
                     ]);
                 }
                 if ($this->isClass('pwd:Image', $item)) {
+                    echo sprintf('<h3>%s</h3>', $view->translate('Documents in image'));
                     echo $view->partial('pwd/image-documents', [
                         'imageDocuments' => $this->getImageDocuments($item),
                     ]);

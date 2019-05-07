@@ -5,6 +5,7 @@ use Omeka\Api\Representation\ItemRepresentation;
 use Omeka\Module\AbstractModule;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
+use Zend\Mvc\MvcEvent;
 
 class Module extends AbstractModule
 {
@@ -87,6 +88,15 @@ class Module extends AbstractModule
                 ],
             ],
         ];
+    }
+
+    public function onBootstrap(MvcEvent $event)
+    {
+        parent::onBootstrap($event);
+
+        // Add ACL rules.
+        $acl = $this->getServiceLocator()->get('Omeka\Acl');
+        $acl->allow(null, 'Pwd\Controller\Site\Index');
     }
 
     public function attachListeners(SharedEventManagerInterface $sharedEventManager)

@@ -157,7 +157,7 @@ class Module extends AbstractModule
                             '<h3>%s</h3>',
                             $view->hyperlink(
                                 $view->translate('Transcribe this document'),
-                                $view->uri('scripto-item-id', ['site-project-id' => 1, 'project-id' => 1, 'item-id' => $item->id()], true)
+                                $view->url('scripto-item-id', ['site-project-id' => 1, 'project-id' => 1, 'item-id' => $item->id()], true)
                             )
                         );
                     }

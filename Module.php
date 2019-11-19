@@ -151,7 +151,7 @@ class Module extends AbstractModule
                 $view = $event->getTarget();
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
-                    $sItem = $view->api()->searchOne('scripto_items', ['scripto_project_id' => 1, 'item_id' => $item->id()]);
+                    $sItem = $view->api()->searchOne('scripto_items', ['scripto_project_id' => 1, 'item_id' => $item->id()])->getContent();
                     if ($sItem && in_array($sItem->status(), [ScriptoItemRepresentation::STATUS_NEW, ScriptoItemRepresentation::STATUS_IN_PROGRESS])) {
                         echo sprintf(
                             '<h3>%s</h3>',

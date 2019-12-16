@@ -3,6 +3,7 @@ namespace Pwd;
 
 use Omeka\Api\Representation\ItemRepresentation;
 use Omeka\Module\AbstractModule;
+use Scripto\Api\Representation\ScriptoItemRepresentation;
 use Zend\EventManager\Event;
 use Zend\EventManager\SharedEventManagerInterface;
 use Zend\Mvc\MvcEvent;
@@ -150,6 +151,17 @@ class Module extends AbstractModule
                 $view = $event->getTarget();
                 $item = $view->item;
                 if ($this->isClass('pwd:Document', $item)) {
+                    $sItem = $view->api()->searchOne('scripto_items', ['scripto_project_id' => 1, 'item_id' => $item->id()])->getContent();
+                    if ($sItem && in_array($sItem->status(), [ScriptoItemRepresentation::STATUS_NEW, ScriptoItemRepresentation::STATUS_IN_PROGRESS])) {
+                        echo sprintf(
+                            '<h3>%s</h3>',
+                            $view->hyperlink(
+                                $view->translate('Transcribe this document'),
+                                $view->url('scripto-item-id', ['site-project-id' => 1, 'project-id' => 1, 'item-id' => $item->id()], true),
+                                ['class' => 'button']
+                            )
+                        );
+                    }
                     echo $view->partial('pwd/document-instances-site', [
                         'documentInstances' => $this->getDocumentInstances($item),
                     ]);

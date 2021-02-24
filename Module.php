@@ -4,9 +4,9 @@ namespace Pwd;
 use Omeka\Api\Representation\ItemRepresentation;
 use Omeka\Module\AbstractModule;
 use Scripto\Api\Representation\ScriptoItemRepresentation;
-use Zend\EventManager\Event;
-use Zend\EventManager\SharedEventManagerInterface;
-use Zend\Mvc\MvcEvent;
+use Laminas\EventManager\Event;
+use Laminas\EventManager\SharedEventManagerInterface;
+use Laminas\Mvc\MvcEvent;
 
 class Module extends AbstractModule
 {
